@@ -15,4 +15,3 @@ class CloudClient:
     """
     def __init__(self, credentials: Credentials):
         self.credentials = credentials
-
