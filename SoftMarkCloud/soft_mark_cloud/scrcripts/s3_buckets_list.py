@@ -14,6 +14,7 @@ class S3BucketObject:
 
 @dataclass
 class S3Bucket:
+    name: str
     creation_date: datetime.datetime
     bucket_objects: list
 
@@ -28,7 +29,7 @@ def list_s3_buckets_objects(bucket_name: str, s3) -> list:
     return bucket_objects_list
 
 
-def dict_s3_buckets(key_id: str, access_key: str) -> dict:
+def list_s3_buckets(key_id: str, access_key: str) -> dict:
     s3 = boto3.client(
         's3',
         aws_access_key_id=key_id,
@@ -39,9 +40,9 @@ def dict_s3_buckets(key_id: str, access_key: str) -> dict:
     for bucket in resp['Buckets']:
         bucket_name = bucket['Name']
         bucket_creation_date = bucket['CreationDate']
-        bucket_dict[bucket_name] = S3Bucket(bucket_creation_date, list_s3_buckets_objects(bucket_name, s3))
+        bucket_dict[bucket_name] = S3Bucket(bucket_name, bucket_creation_date, list_s3_buckets_objects(bucket_name, s3))
     return bucket_dict
 
 
 if __name__ == '__main__':
-    print(dict_s3_buckets(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY))
+    print(list_s3_buckets(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY))
