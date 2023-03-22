@@ -43,10 +43,12 @@ def list_s3_buckets(key_id: str, access_key: str) -> list:
     bucket_list = []
     resp = s3.list_buckets()
     for bucket in resp['Buckets']:
-        bucket_list.append(S3Bucket(bucket['Name'],
-                                    bucket['CreationDate'],
-                                    list_s3_buckets_contents(bucket['Name'], s3)
-                                    ))
+        bucket_list.append(
+            S3Bucket(
+                name=bucket['Name'],
+                creation_date=bucket['CreationDate'],
+                bucket_contents=list_s3_buckets_contents(bucket['Name'], s3)
+                ))
     return bucket_list
 
 
