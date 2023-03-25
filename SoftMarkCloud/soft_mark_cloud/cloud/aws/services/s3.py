@@ -15,14 +15,12 @@ class S3BucketObject:
     last_modified: datetime.datetime
 
     @classmethod
-    def from_bucket_contents(cls, bucket_contents: Dict[str, dict]) -> Dict[str, 'S3BucketObject']:
-        if not bucket_contents:
-            return {}
-        return {obj['Key']: cls(
-            key=obj['Key'],
-            size=obj['Size'],
-            last_modified=obj['LastModified']
-        ) for obj in bucket_contents.values()}
+    def from_api_dict(cls, bucket_content: dict) -> 'S3BucketObject':
+        return cls(
+            key=bucket_content['Key'],
+            size=bucket_content['Size'],
+            last_modified=bucket_content['LastModified']
+        )
 
 
 @dataclass
@@ -57,11 +55,7 @@ class S3Client(AWSGlobalClient):
 
     def list_s3_buckets_contents(self, bucket_name) -> List[S3BucketObject]:
         contents = self.client.list_objects(Bucket=bucket_name)
-        return [S3BucketObject(
-            key=obj['Key'],
-            size=obj['Size'],
-            last_modified=obj['LastModified']
-        ) for obj in contents.get('Contents', [])]
+        return [S3BucketObject.from_api_dict(bucket_content) for bucket_content in contents.get('Contents', [])]
 
     def list_s3_buckets(self) -> Iterator[S3Bucket]:
         """
