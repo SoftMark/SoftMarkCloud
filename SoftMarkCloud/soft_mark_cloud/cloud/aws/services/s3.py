@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass
-from typing import Iterator, Dict
+from typing import Iterator, Dict, List
 
 from soft_mark_cloud.cloud.aws.core import AWSGlobalClient, AWSCredentials
 
@@ -39,12 +39,7 @@ class S3Bucket:
         return sum(i.size for i in self.bucket_contents.values())
 
     @classmethod
-    def from_api_dict(cls, bucket: dict, client) -> 'S3Bucket':
-        contents = client.list_objects(Bucket=bucket['Name'])['Contents']
-        if not contents:
-            bucket_contents = {}
-        else:
-            bucket_contents = S3BucketObject.from_bucket_contents({obj['Key']: obj for obj in contents})
+    def get_bucket_from_dict(cls, bucket: dict, bucket_contents: Dict[str, 'S3BucketObject']) -> 'S3Bucket':
         return cls(
             name=bucket['Name'],
             creation_date=bucket['CreationDate'],
@@ -56,18 +51,22 @@ class S3Client(AWSGlobalClient):
     """
     This class provides S3 API functional
     """
+
     def __init__(self, credentials: AWSCredentials):
         super().__init__(credentials, service_name='s3')
 
-    def list_s3_buckets_contents(self) -> dict:
-        bucket_contents_dict = {}
-        response = self.client.list_objects()
-        if 'Contents' in response:
-            for obj in response['Contents']:
-                bucket_contents_dict[obj['Key']] = S3BucketObject(obj['Key'], obj['Size'], obj['LastModified'])
-        return bucket_contents_dict
+    def list_s3_buckets_contents(self, bucket) -> List[S3BucketObject]:
+        contents = self.client.list_objects(Bucket=bucket['Name'])
+        if 'Contents' in contents:
+            return [S3BucketObject(
+                key=obj['Key'],
+                size=obj['Size'],
+                last_modified=obj['LastModified']
+            ) for obj in contents['Contents']]
+        else:
+            return []
 
-    def describe_s3bucket_instances(self) -> Iterator[S3Bucket]:
+    def list_s3_buckets(self) -> Iterator[S3Bucket]:
         """
         Collects s3 bucket instances
 
@@ -79,11 +78,14 @@ class S3Client(AWSGlobalClient):
         ...     aws_secret_access_key='{aws_secret_access_key}'
         ... )
         ... client = S3Client(credentials=creds)
-        ... s3_buckets = list(client.describe_s3bucket_instances())
+        ... s3_buckets = list(client.list_s3_buckets())
         ... print(s3_buckets)
         out:
            List of S3Bucket class instances.
         """
         resp: dict = self.client.list_buckets()
         for bucket in resp['Buckets']:
-            yield S3Bucket.from_api_dict(bucket, self.client)
+            bucket_contents = {
+                obj.key: obj
+                for obj in self.list_s3_buckets_contents(bucket)}
+            yield S3Bucket.get_bucket_from_dict(bucket, bucket_contents)
