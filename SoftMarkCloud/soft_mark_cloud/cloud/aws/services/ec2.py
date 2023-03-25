@@ -39,13 +39,14 @@ class EC2Client(AWSRegionalClient):
 
         Examples
         --------
-        >>> from from soft_mark_cloud.cloud.aws.services.ec2 import AWSCredentials, EC2Client
+        >>> from soft_mark_cloud.cloud.aws.services.ec2 import AWSCredentials, EC2Client
         ... creds = AWSCredentials(
         ...     aws_access_key_id='{aws_access_key_id}',
         ...     aws_secret_access_key='{aws_secret_access_key}'
         ... )
         ... client = EC2Client(credentials=creds, region_name='{region_name}')
-        ... list(client.describe_ec2_instances())
+        ... ec2_instances = list(client.describe_ec2_instances())
+        ... print(ec2_instances)
         out:
             List of EC2Instance class instances.
         """
