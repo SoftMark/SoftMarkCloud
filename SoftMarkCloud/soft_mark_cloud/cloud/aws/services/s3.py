@@ -1,5 +1,5 @@
 import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Iterator, Dict, List
 
 from soft_mark_cloud.cloud.aws.core import AWSGlobalClient, AWSCredentials
@@ -30,7 +30,7 @@ class S3Bucket:
     """
     name: str
     creation_date: datetime.datetime
-    bucket_contents: Dict[str, 'S3BucketObject']
+    bucket_contents: Dict[str, S3BucketObject] = field(default_factory=dict)
 
     @property
     def bucket_size(self) -> int:
@@ -41,7 +41,6 @@ class S3Bucket:
         return cls(
             name=bucket['Name'],
             creation_date=bucket['CreationDate'],
-            bucket_contents={}
         )
 
 
@@ -53,7 +52,7 @@ class S3Client(AWSGlobalClient):
     def __init__(self, credentials: AWSCredentials):
         super().__init__(credentials, service_name='s3')
 
-    def list_s3_buckets_contents(self, bucket_name) -> List[S3BucketObject]:
+    def list_s3_buckets_contents(self, bucket_name: str) -> List[S3BucketObject]:
         contents = self.client.list_objects(Bucket=bucket_name)
         return [S3BucketObject.from_api_dict(bucket_content) for bucket_content in contents.get('Contents', [])]
 
@@ -75,10 +74,8 @@ class S3Client(AWSGlobalClient):
            List of S3Bucket class instances.
         """
         resp: dict = self.client.list_buckets()
-        for bucket in resp['Buckets']:
-            bucket_contents = {
-                obj.key: obj
-                for obj in self.list_s3_buckets_contents(bucket['Name'])}
-            s3_bucket = S3Bucket.from_api_dict(bucket)
-            s3_bucket.bucket_contents = bucket_contents
+        for bucket_dict in resp['Buckets']:
+            s3_bucket = S3Bucket.from_api_dict(bucket_dict)
+            bucket_contents = self.list_s3_buckets_contents(s3_bucket.name)
+            s3_bucket.bucket_contents = {bc.key: bc for bc in bucket_contents}
             yield s3_bucket
