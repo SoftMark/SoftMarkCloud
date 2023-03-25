@@ -39,11 +39,11 @@ class S3Bucket:
         return sum(i.size for i in self.bucket_contents.values())
 
     @classmethod
-    def get_bucket_from_dict(cls, bucket: dict, bucket_contents: Dict[str, 'S3BucketObject']) -> 'S3Bucket':
+    def from_api_dict(cls, bucket: dict) -> 'S3Bucket':
         return cls(
             name=bucket['Name'],
             creation_date=bucket['CreationDate'],
-            bucket_contents=bucket_contents
+            bucket_contents={}
         )
 
 
@@ -55,16 +55,13 @@ class S3Client(AWSGlobalClient):
     def __init__(self, credentials: AWSCredentials):
         super().__init__(credentials, service_name='s3')
 
-    def list_s3_buckets_contents(self, bucket) -> List[S3BucketObject]:
-        contents = self.client.list_objects(Bucket=bucket['Name'])
-        if 'Contents' in contents:
-            return [S3BucketObject(
-                key=obj['Key'],
-                size=obj['Size'],
-                last_modified=obj['LastModified']
-            ) for obj in contents['Contents']]
-        else:
-            return []
+    def list_s3_buckets_contents(self, bucket_name) -> List[S3BucketObject]:
+        contents = self.client.list_objects(Bucket=bucket_name)
+        return [S3BucketObject(
+            key=obj['Key'],
+            size=obj['Size'],
+            last_modified=obj['LastModified']
+        ) for obj in contents.get('Contents', [])]
 
     def list_s3_buckets(self) -> Iterator[S3Bucket]:
         """
@@ -87,5 +84,7 @@ class S3Client(AWSGlobalClient):
         for bucket in resp['Buckets']:
             bucket_contents = {
                 obj.key: obj
-                for obj in self.list_s3_buckets_contents(bucket)}
-            yield S3Bucket.get_bucket_from_dict(bucket, bucket_contents)
+                for obj in self.list_s3_buckets_contents(bucket['Name'])}
+            s3_bucket = S3Bucket.from_api_dict(bucket)
+            s3_bucket.bucket_contents = bucket_contents
+            yield s3_bucket
