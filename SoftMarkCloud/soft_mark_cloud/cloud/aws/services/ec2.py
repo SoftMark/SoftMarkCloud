@@ -12,6 +12,7 @@ class EC2Instance:
     """
     instance_id: str
     instance_type: str
+    instance_state: str
     subnet_id: str
     launch_time: datetime.datetime
 
@@ -20,6 +21,7 @@ class EC2Instance:
         return cls(
             instance_id=data['InstanceId'],
             instance_type=data['InstanceType'],
+            instance_state=data['State']['Name'],
             subnet_id=data['SubnetId'],
             launch_time=data['LaunchTime'])
 
