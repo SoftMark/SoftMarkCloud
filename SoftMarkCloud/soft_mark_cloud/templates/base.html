@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'cloud/css/style.css' %}">
+    <link rel="icon" href="{% static 'cloud/favicon.ico' %}" type="image/x-icon">
+    {% block stylesheet %}{% endblock %}
+  </head>
+  <body>
+    <header>
+      {% block header %}{% endblock %}
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+    <footer>
+      {% block footer %}{% endblock %}
+    </footer>
+    <script src="{% static 'cloud/js/script.js' %}"></script>
+    {% block script %}{% endblock %}
+  </body>
+</html>
