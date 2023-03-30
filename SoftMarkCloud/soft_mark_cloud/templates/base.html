@@ -4,20 +4,24 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% endblock %}</title>
+    <title>{% block title %}Base{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'cloud/css/style.css' %}">
     <link rel="icon" href="{% static 'cloud/favicon.ico' %}" type="image/x-icon">
     {% block stylesheet %}{% endblock %}
   </head>
   <body>
     <header>
-      {% block header %}{% endblock %}
+      {% block header %}
+        {% include 'includes/header.html' %}
+      {% endblock %}
     </header>
     <main>
-      {% block content %}{% endblock %}
+      {% block content %}Main{% endblock %}
     </main>
     <footer>
-      {% block footer %}{% endblock %}
+      {% block footer %}
+        {% include 'includes/footer.html' %}
+      {% endblock %}
     </footer>
     <script src="{% static 'cloud/js/script.js' %}"></script>
     {% block script %}{% endblock %}
