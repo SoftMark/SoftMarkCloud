@@ -15,16 +15,20 @@ def index(request):
     return render(request, 'index.html')
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def sign_up(request):
-    form = SignUpForm(request.data)
-    if form.is_valid():
-        user = form.get_user()
-        user.save()
-        login(request, user)
-        return JsonResponse({'status': 'success'}, status=200)
-    else:
-        return JsonResponse({'errors': form.errors}, status=400)
+    if request.method == 'GET':
+        form = SignUpForm()
+        return render(request, 'signup.html', {'form': form})
+    elif request.method == 'POST':
+        form = SignUpForm(request.data)
+        if form.is_valid():
+            user = form.get_user()
+            user.save()
+            login(request, user)
+            return redirect('index')
+        else:
+            return JsonResponse({'errors': form.errors}, status=400)
 
 
 def sign_in(request):
