@@ -3,34 +3,28 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import api_view
+from django.http import JsonResponse
 
 from .forms import SignUpForm
 
-from models import User
+from .models import User
 
 
+def index(request):
+    return render(request, 'index.html')
+
+
+@api_view(['POST'])
 def sign_up(request):
-    if request.method == "POST":
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            email = form.cleaned_data.get('email')
-            username = form.cleaned_data.get('username')
-
-            # Check for uniqueness of email and username
-            if User.objects.filter(email=email).exists():
-                form.add_error('email', 'User with this email already exists')
-            elif User.objects.filter(username=username).exists():
-                form.add_error('username', 'User with this username already exists')
-            else:
-                user.save()
-                login(request, user)
-                return redirect('index.html')
+    form = SignUpForm(request.data)
+    if form.is_valid():
+        user = form.get_user()
+        user.save()
+        login(request, user)
+        return JsonResponse({'status': 'success'}, status=200)
     else:
-        form = SignUpForm()
-    return render(request, 'signup.html', {
-        'form': form,
-    })
+        return JsonResponse({'errors': form.errors}, status=400)
 
 
 def sign_in(request):
