@@ -21,7 +21,7 @@ def sign_up(request):
         form = SignUpForm()
         return render(request, 'signup.html', {'form': form})
     elif request.method == 'POST':
-        form = SignUpForm(request.data)
+        form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.get_user()
             user.save()

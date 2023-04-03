@@ -137,3 +137,4 @@ REST_FRAMEWORK = {
 }
 
 LOGIN_URL = 'login'
+
