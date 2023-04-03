@@ -3,18 +3,21 @@ from django.contrib.auth import login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
+from rest_framework.decorators import api_view
 
 from .forms import SignUpForm, LoginForm
 
 from .models import User
 
 
+@api_view(['GET'])
 @login_required
 def index(request):
     current_user = request.user
     return render(request, 'index.html', {'user': current_user})
 
 
+@api_view(['GET', 'POST'])
 @user_passes_test(lambda u: not u.is_authenticated, login_url='home')
 def sign_up(request):
     if request.method == 'GET':
@@ -28,9 +31,11 @@ def sign_up(request):
             login(request, user)
             return redirect('home')
         else:
-            return JsonResponse({'errors': form.errors}, status=400)
+            # return JsonResponse({'errors': form.errors}, status=400)
+            return render(request, 'signup.html', {'form': form})
 
 
+@api_view(['GET', 'POST'])
 @user_passes_test(lambda u: not u.is_authenticated, login_url='home')
 def sign_in(request):
     if request.method == 'GET':
@@ -59,6 +64,8 @@ def sign_in(request):
             return render(request, 'signin.html', {'form': form})
 
 
+@api_view(['GET'])
+@login_required
 def logout_user(request):
     logout(request)
     return redirect('home')
