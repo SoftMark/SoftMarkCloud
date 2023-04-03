@@ -19,5 +19,4 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('soft_mark_cloud.urls')),
-    path('', include('django.contrib.auth.urls')),
 ]
