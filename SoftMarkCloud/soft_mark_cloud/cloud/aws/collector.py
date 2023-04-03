@@ -3,6 +3,21 @@ from soft_mark_cloud.cloud.aws.core import AWSCredentials, AWSRegionalClient, AW
 
 
 class AWSCollector(CloudCollector):
+    """
+    Examples
+    --------
+
+    >>> from pprint import pprint
+    >>> from soft_mark_cloud.cloud.aws.collector import AWSCollector
+    >>> from soft_mark_cloud.cloud.aws.services.ec2 import AWSCredentials
+    ... creds = AWSCredentials(
+    ...     aws_access_key_id='{aws_access_key_id}',
+    ...     aws_secret_access_key='{aws_secret_access_key}'
+    ... )
+    >>> pprint(AWSCollector(creds).collect_all())
+    out:
+        All collected data from AWS
+    """
     all_regions = 'eu-central-1',  # TODO: add more regions
 
     def __init__(self, credentials: AWSCredentials):

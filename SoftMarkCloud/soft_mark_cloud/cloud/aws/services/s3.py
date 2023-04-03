@@ -60,13 +60,8 @@ class S3Client(AWSGlobalClient):
     def __init__(self, credentials: AWSCredentials):
         super().__init__(credentials, service_name='s3')
 
-<<<<<<< Updated upstream
-    def list_s3_buckets_contents(self, bucket_name: str) -> List[S3BucketObject]:
-        contents = self.client.list_objects(Bucket=bucket_name)
-=======
     def list_s3_buckets_contents(self, bucket_name) -> List[S3BucketObject]:
         contents = self.boto3_client.list_objects(Bucket=bucket_name)
->>>>>>> Stashed changes
         return [S3BucketObject.from_api_dict(bucket_content) for bucket_content in contents.get('Contents', [])]
 
     def list_s3_buckets(self) -> Iterator[S3Bucket]:
@@ -86,21 +81,11 @@ class S3Client(AWSGlobalClient):
         out:
            List of S3Bucket class instances.
         """
-<<<<<<< Updated upstream
-        resp: dict = self.client.list_buckets()
+        resp: dict = self.boto3_client.list_buckets()
         for bucket_dict in resp['Buckets']:
             s3_bucket = S3Bucket.from_api_dict(bucket_dict)
             bucket_contents = self.list_s3_buckets_contents(s3_bucket.name)
             s3_bucket.bucket_contents = {bc.key: bc for bc in bucket_contents}
-=======
-        resp: dict = self.boto3_client.list_buckets()
-        for bucket in resp['Buckets']:
-            bucket_contents = {
-                obj.key: obj
-                for obj in self.list_s3_buckets_contents(bucket['Name'])}
-            s3_bucket = S3Bucket.from_api_dict(bucket)
-            s3_bucket.bucket_contents = bucket_contents
->>>>>>> Stashed changes
             yield s3_bucket
 
     def collect_resources(self) -> List[S3Bucket]:

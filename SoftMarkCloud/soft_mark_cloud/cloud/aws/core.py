@@ -34,6 +34,7 @@ class AWSClient(CloudClient):
     """
     AWS client class
     """
+    # TODO: Make `service_name` as class field
     def __init__(self, credentials: AWSCredentials, service_name: str, **kwargs):
         super().__init__(credentials)
         self.service_name = service_name
