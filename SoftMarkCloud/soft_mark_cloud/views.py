@@ -1,21 +1,21 @@
 from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login, logout
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.decorators import api_view
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required, user_passes_test
 
-from .forms import SignUpForm
+from .forms import SignUpForm, LoginForm
 
 from .models import User
 
 
+@login_required
 def index(request):
-    return render(request, 'index.html')
+    current_user = request.user
+    return render(request, 'index.html', {'user': current_user})
 
 
-@api_view(['GET', 'POST'])
+@user_passes_test(lambda u: not u.is_authenticated, login_url='home')
 def sign_up(request):
     if request.method == 'GET':
         form = SignUpForm()
@@ -26,42 +26,39 @@ def sign_up(request):
             user = form.get_user()
             user.save()
             login(request, user)
-            return redirect('index')
+            return redirect('home')
         else:
             return JsonResponse({'errors': form.errors}, status=400)
 
 
+@user_passes_test(lambda u: not u.is_authenticated, login_url='home')
 def sign_in(request):
-    if request.method == "POST":
-        form = AuthenticationForm(request, data=request.POST)
+    if request.method == 'GET':
+        form = LoginForm
+        return render(request, 'signin.html', {'form': form})
+    elif request.method == 'POST':
+        form = LoginForm(request.POST)
         if form.is_valid():
-            # Get data from the form
-            username_or_email = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-
-            # Try to authenticate the user using username
-            user = authenticate(username=username_or_email, password=password)
-            if user is None:
-                # If authentication failed, try by email
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            try:
+                user = User.objects.get(username=username)
+            except ObjectDoesNotExist:
+                # If user does not exist with the username, try with the email
                 try:
-                    user = User.objects.get(email=username_or_email)
-                    user = authenticate(username=user.username, password=password)
+                    user = User.objects.get(email=username)
                 except ObjectDoesNotExist:
-                    # Error handling - user not found in database
-                    messages.error(request, 'Incorrect login or password')
-                    return render(request, 'signin.html')
-            if user is not None:
-                login(request, user)
-                return redirect('index.html')
-            else:
-                form.add_error(None, 'Incorrect login or password')
-    else:
-        form = AuthenticationForm
-        return render(request, 'signin.html', {
-            'form': form,
-        })
+                    # If user does not exist with the email as well, return an error
+                    return render(request, 'signin.html', {'form': form, 'error': 'Incorrect login or password.'})
+            if not user.check_password(password):
+                # If password does not match, return an error
+                return render(request, 'signin.html', {'form': form, 'error': 'Incorrect login or password.'})
+            login(request, user)
+            return redirect('home')
+        else:
+            return render(request, 'signin.html', {'form': form})
 
 
-def sign_out(request):
+def logout_user(request):
     logout(request)
-    return redirect('index.html')
+    return redirect('home')
