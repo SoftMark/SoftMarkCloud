@@ -13,3 +13,8 @@ class SignUpForm(UserCreationForm):
     def get_user(self):
         user = super(SignUpForm, self).save(commit=False)
         return user
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput())
