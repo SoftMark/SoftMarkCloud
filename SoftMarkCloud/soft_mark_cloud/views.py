@@ -29,10 +29,11 @@ def sign_up(request):
             user = form.get_user()
             user.save()
             login(request, user)
-            return redirect('home')
+            # return redirect('home')
+            return JsonResponse({'status': 'success'}, status=200)
         else:
-            # return JsonResponse({'errors': form.errors}, status=400)
-            return render(request, 'signup.html', {'form': form})
+            return JsonResponse({'errors': form.errors}, status=400)
+            # return render(request, 'signup.html', {'form': form})
 
 
 @api_view(['GET', 'POST'])
@@ -54,14 +55,17 @@ def sign_in(request):
                     user = User.objects.get(email=username)
                 except ObjectDoesNotExist:
                     # If user does not exist with the email as well, return an error
-                    return render(request, 'signin.html', {'form': form, 'error': 'Incorrect login or password.'})
+                    return JsonResponse({'errors': form.errors}, status=400)
+                    # return render(request, 'signin.html', {'form': form, 'error': 'Incorrect login or password.'})
             if not user.check_password(password):
                 # If password does not match, return an error
-                return render(request, 'signin.html', {'form': form, 'error': 'Incorrect login or password.'})
+                return JsonResponse({'errors': form.errors}, status=400)
+                # return render(request, 'signin.html', {'form': form, 'error': 'Incorrect login or password.'})
             login(request, user)
-            return redirect('home')
+            return JsonResponse({'status': 'success'}, status=200)
+            # return redirect('home')
         else:
-            return render(request, 'signin.html', {'form': form})
+            return JsonResponse({'errors': form.errors}, status=400)
 
 
 @api_view(['GET'])
