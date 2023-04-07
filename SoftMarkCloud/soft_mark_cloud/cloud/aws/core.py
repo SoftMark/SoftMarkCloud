@@ -1,12 +1,8 @@
 import boto3
 from dataclasses import dataclass
-from logging import getLogger
 from typing import List
 
 from soft_mark_cloud.cloud.core import Credentials, CloudClient
-
-
-log = getLogger("AWSLogger")
 
 
 @dataclass

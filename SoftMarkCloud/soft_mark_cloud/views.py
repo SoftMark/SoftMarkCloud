@@ -29,11 +29,14 @@ def aws_cloud_data(request):
     """
     try:
         creds_db = AWSCredentials.objects.get(user=request.user)
-        creds = AWSCreds(
-            aws_access_key_id=creds_db.aws_access_key_id,
-            aws_secret_access_key=creds_db.aws_secret_access_key)
     except ObjectDoesNotExist:
         return Response('AWS credentials not provided', status=401)
+
+    # TODO: check if aws creds correct
+
+    creds = AWSCreds(
+        aws_access_key_id=creds_db.aws_access_key_id,
+        aws_secret_access_key=creds_db.aws_secret_access_key)
 
     collector = AWSCollector(credentials=creds)
     aws_data = collector.collect_all()
