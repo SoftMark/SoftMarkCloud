@@ -22,7 +22,7 @@ class AWSResource:
 
 
 @dataclass
-class AWSCredentials(Credentials):
+class AWSCreds(Credentials):
     """
     Credentials holder dataclass
     """
@@ -32,13 +32,13 @@ class AWSCredentials(Credentials):
 
 class AWSClient(CloudClient):
     """
-    AWS client class
+    AWS client abstract class
     """
-    # TODO: Make `service_name` as class field
-    def __init__(self, credentials: AWSCredentials, service_name: str, **kwargs):
+    service_name = None
+
+    def __init__(self, credentials: AWSCreds, **kwargs):
         super().__init__(credentials)
-        self.service_name = service_name
-        self.boto3_client = boto3.client(service_name, **self.credentials.__dict__, **kwargs)
+        self.boto3_client = boto3.client(self.service_name, **self.credentials.__dict__, **kwargs)
         self.account_id = self.get_account_id()
 
     @property
@@ -52,9 +52,7 @@ class AWSClient(CloudClient):
         """
         Abstract collect all resources method
         """
-        # TODO: raise error if not implemented
-        log.warning("Warning. Collecting is not Implemented!")
-        return []
+        raise NotImplementedError('Can`t call abstract method collect_resources')
 
     def collect_all(self):
         """
@@ -67,16 +65,16 @@ class AWSClient(CloudClient):
 
 class AWSGlobalClient(AWSClient):
     """
-    Global AWS client class
+    Global AWS client abstract class
     """
-    def __init__(self, credentials: AWSCredentials, service_name: str):
-        super().__init__(credentials, service_name)
+    def __init__(self, credentials: AWSCreds):
+        super().__init__(credentials)
 
 
 class AWSRegionalClient(AWSClient):
     """
-    Regional AWS client class
+    Regional AWS client abstract class
     """
-    def __init__(self, credentials: AWSCredentials, service_name: str, region_name: str):
-        self.region = region_name
-        super().__init__(credentials, service_name, region_name=region_name)
+    def __init__(self, credentials: AWSCreds, region_name: str):
+        self.region_name = region_name
+        super().__init__(credentials, region_name=region_name)

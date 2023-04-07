@@ -1,5 +1,5 @@
 from soft_mark_cloud.cloud.core import CloudCollector
-from soft_mark_cloud.cloud.aws.core import AWSCredentials, AWSRegionalClient, AWSGlobalClient
+from soft_mark_cloud.cloud.aws.core import AWSCreds, AWSRegionalClient, AWSGlobalClient
 
 
 class AWSCollector(CloudCollector):
@@ -9,8 +9,8 @@ class AWSCollector(CloudCollector):
 
     >>> from pprint import pprint
     >>> from soft_mark_cloud.cloud.aws.collector import AWSCollector
-    >>> from soft_mark_cloud.cloud.aws.services.ec2 import AWSCredentials
-    ... creds = AWSCredentials(
+    >>> from soft_mark_cloud.cloud.aws.services.ec2 import AWSCreds
+    ... creds = AWSCreds(
     ...     aws_access_key_id='{aws_access_key_id}',
     ...     aws_secret_access_key='{aws_secret_access_key}'
     ... )
@@ -18,9 +18,11 @@ class AWSCollector(CloudCollector):
     out:
         All collected data from AWS
     """
-    all_regions = 'eu-central-1',  # TODO: add more regions
+    all_regions = ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2', 'ap-south-1', 'ap-northeast-2', 'ap-northeast-3',
+                   'ap-southeast-1', 'ap-southeast-2', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2',
+                   'eu-west-3', 'eu-north-1', 'sa-east-1']
 
-    def __init__(self, credentials: AWSCredentials):
+    def __init__(self, credentials: AWSCreds):
         self.credentials = credentials
 
     def collect_all(self) -> dict:
@@ -32,12 +34,12 @@ class AWSCollector(CloudCollector):
         }
 
         for region in self.all_regions:
-            for client_cls in AWSRegionalClient.__subclasses__():
-                regional_client = client_cls(self.credentials, region)
+            for regional_client_cls in AWSRegionalClient.__subclasses__():
+                regional_client = regional_client_cls(self.credentials, region)
                 res['regional'][region].update(regional_client.collect_all())
 
-        for client_cls in AWSGlobalClient.__subclasses__():
-            global_client = client_cls(self.credentials)
+        for global_client_cls in AWSGlobalClient.__subclasses__():
+            global_client = global_client_cls(self.credentials)
             res['global'].update(global_client.collect_all())
 
         return res
