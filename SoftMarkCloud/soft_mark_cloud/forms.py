@@ -52,6 +52,7 @@ class LoginForm(AuthenticationForm):
             if not authenticated_user:
                 raise self.get_invalid_login_error()
 
+            self.user_cache = authenticated_user
             self.confirm_login_allowed(authenticated_user)
 
         return self.cleaned_data
