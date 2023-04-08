@@ -15,3 +15,11 @@ class CloudClient:
     """
     def __init__(self, credentials: Credentials):
         self.credentials = credentials
+
+
+class CloudCollector:
+    """
+    Abstract cloud collector class
+    """
+    def collect_all(self):
+        pass

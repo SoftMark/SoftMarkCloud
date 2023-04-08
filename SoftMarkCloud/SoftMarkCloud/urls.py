@@ -16,7 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from soft_mark_cloud.views import aws_cloud_data
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/aws_cloud_data', aws_cloud_data),
     path('', include('soft_mark_cloud.urls')),
 ]
