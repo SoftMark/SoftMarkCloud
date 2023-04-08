@@ -29,10 +29,13 @@ document.querySelector('form.auth-form').addEventListener('submit', function(eve
                 let error_child = document.querySelector('.error-message ul');
                 let errors_message = JSON.parse(this.response)['errors'];
                 let ul_error = document.createElement("ul");
-                for (error_message in errors_message) {
-                    let li_error = document.createElement("li");
-                    li_error.textContent = errors_message[error_message];
-                    ul_error.appendChild(li_error);
+                for (let error_message in errors_message) {
+                    let field_error_messages = errors_message[error_message]
+                    for (let err_msg_i in field_error_messages) {
+                        let li_error = document.createElement("li");
+                        li_error.textContent = field_error_messages[err_msg_i];
+                        ul_error.appendChild(li_error);
+                    }
                 }
                 error.replaceChild(ul_error, error_child);
 

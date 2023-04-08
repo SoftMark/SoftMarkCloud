@@ -1,7 +1,7 @@
 <a href="/" class="logo">SoftMarkCloud</a>
 <nav class="nav-menu">
     <ul class="menu-list">
-        {% if user == "AnonymousUser" %}
+        {% if user.is_anonymous %}
             <li><a href="{% url 'login' %}" class="menu-item">Sign in</a></li>
             <li><a href="{% url 'register' %}" class="menu-item">Sign up</a></li>
         {% else %}
