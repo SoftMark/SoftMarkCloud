@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.core.exceptions import ObjectDoesNotExist
+
 from soft_mark_cloud.models import User
 
 
@@ -38,20 +40,18 @@ class LoginForm(AuthenticationForm):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
 
-        if username is not None and password:
-            self.user_cache = authenticate(self.request, username=username, password=password)
-            if self.user_cache is None:
+        if username and password:
+            authenticated_user = authenticate(self.request, username=username, password=password)
+            if not authenticated_user:
                 try:
                     user = User.objects.get(email=username)
-                    self.user_cache = authenticate(self.request, username=user.username, password=password)
-                except User.DoesNotExist:
+                    authenticated_user = authenticate(self.request, username=user.username, password=password)
+                except ObjectDoesNotExist:
                     pass
 
-            if self.user_cache is None:
+            if not authenticated_user:
                 raise self.get_invalid_login_error()
-            else:
-                self.confirm_login_allowed(self.user_cache)
+
+            self.confirm_login_allowed(authenticated_user)
 
         return self.cleaned_data
-
-
