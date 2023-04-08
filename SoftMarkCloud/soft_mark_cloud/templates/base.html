@@ -6,19 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Base{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'cloud/css/style.css' %}">
-    <link rel="icon" href="{% static 'cloud/favicon.ico' %}" type="image/x-icon">
     {% block stylesheet %}{% endblock %}
+    <link rel="icon" href="{% static 'cloud/favicon.ico' %}" type="image/x-icon">
   </head>
   <body>
-    <header>
+    <header class="header">
       {% block header %}
         {% include 'includes/header.html' %}
       {% endblock %}
     </header>
-    <main>
+    <main class="container">
       {% block content %}Main{% endblock %}
     </main>
-    <footer>
+    <footer class="footer">
       {% block footer %}
         {% include 'includes/footer.html' %}
       {% endblock %}

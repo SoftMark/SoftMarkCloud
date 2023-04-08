@@ -7,6 +7,14 @@ from soft_mark_cloud.models import User
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
+    def __init__(self, *args, **kwargs):
+        super(SignUpForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
+            visible.field.widget.attrs['placeholder'] = visible.field.label
+
+        self.fields['email'].widget.attrs['placeholder'] = 'Email'
+
     class Meta:
         model = User
         fields = ('username', 'email')
@@ -19,6 +27,12 @@ class SignUpForm(UserCreationForm):
 class LoginForm(AuthenticationForm):
     username = forms.CharField(max_length=254, label='Username/Email')
     password = forms.CharField(label='Password', strip=False, widget=forms.PasswordInput)
+
+    def __init__(self, *args, **kwargs):
+        super(LoginForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
+            visible.field.widget.attrs['placeholder'] = visible.field.label
 
     def clean(self):
         username = self.cleaned_data.get('username')
@@ -39,3 +53,5 @@ class LoginForm(AuthenticationForm):
                 self.confirm_login_allowed(self.user_cache)
 
         return self.cleaned_data
+
+
