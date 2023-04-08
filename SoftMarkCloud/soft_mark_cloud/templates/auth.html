@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Auth{% endblock %}
+
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'cloud/css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+    <h2 class="title-page">{% block title-page %}Auth{% endblock %}</h2>
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="error-message">
+            <ul></ul>
+        </div>
+        <button type="submit" class="send-form">{% block send-form %}Auth{% endblock %}</button>
+    </form>
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'cloud/js/auth.js' %}"></script>
+{% endblock %}
