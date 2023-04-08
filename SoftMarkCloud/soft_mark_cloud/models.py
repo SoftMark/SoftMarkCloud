@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     age = models.IntegerField(null=True, blank=True)
+    email = models.EmailField(unique=True)
 
 
 class AWSCredentials(models.Model):
