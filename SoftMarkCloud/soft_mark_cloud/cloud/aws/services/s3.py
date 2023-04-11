@@ -4,6 +4,8 @@ from typing import Iterator, Dict, List
 
 from soft_mark_cloud.cloud.aws.core import AWSGlobalClient, AWSCreds, AWSResource
 
+from humanize import naturalsize
+
 
 @dataclass
 class S3BucketObject:
@@ -47,7 +49,7 @@ class S3Bucket(AWSResource):
     @property
     def json(self):
         data = self.__dict__
-        data['bucket_size'] = self.bucket_size
+        data['bucket_size'] = naturalsize(self.bucket_size)
         data['bucket_contents'] = {arn: bo.__dict__ for arn, bo in self.bucket_contents.items()}
         return data
 
