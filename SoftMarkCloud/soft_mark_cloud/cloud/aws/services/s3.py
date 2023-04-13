@@ -24,6 +24,14 @@ class S3BucketObject:
             last_modified=bucket_content['LastModified']
         )
 
+    @property
+    def json(self):
+        data = self.__dict__
+        data['key'] = self.key,
+        data['last_modified'] = self.last_modified
+        data['size'] = naturalsize(self.size)
+        return data
+
 
 @dataclass
 class S3Bucket(AWSResource):
@@ -50,10 +58,7 @@ class S3Bucket(AWSResource):
     def json(self):
         data = self.__dict__
         data['bucket_size'] = naturalsize(self.bucket_size)
-        data['bucket_contents'] = {key: {'key': value.key,
-                                         'last_modified': value.last_modified,
-                                         'size': naturalsize(value.size)}
-                                   for key, value in self.bucket_contents.items()}
+        data['bucket_contents'] = {arn: bo.json for arn, bo in self.bucket_contents.items()}
         return data
 
 
