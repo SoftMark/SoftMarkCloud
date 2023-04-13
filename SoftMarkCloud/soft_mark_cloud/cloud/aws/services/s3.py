@@ -13,14 +13,14 @@ class S3BucketObject:
     S3Bucket content dataclass
     """
     key: str
-    size: int
+    size: str
     last_modified: datetime.datetime
 
     @classmethod
     def from_api_dict(cls, bucket_content: dict) -> 'S3BucketObject':
         return cls(
             key=bucket_content['Key'],
-            size=bucket_content['Size'],
+            size=naturalsize(bucket_content['Size']),
             last_modified=bucket_content['LastModified']
         )
 
