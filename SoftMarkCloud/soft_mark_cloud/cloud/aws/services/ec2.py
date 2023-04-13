@@ -26,6 +26,12 @@ class EC2Instance(AWSResource):
             subnet_id=data['SubnetId'],
             launch_time=data['LaunchTime'])
 
+    @property
+    def json(self):
+        data = self.__dict__
+        data['launch_time'] = self.launch_time.isoformat()
+        return data
+
 
 class EC2Client(AWSRegionalClient):
     """
