@@ -13,14 +13,14 @@ class S3BucketObject:
     S3Bucket content dataclass
     """
     key: str
-    size: str
+    size: int
     last_modified: datetime.datetime
 
     @classmethod
     def from_api_dict(cls, bucket_content: dict) -> 'S3BucketObject':
         return cls(
             key=bucket_content['Key'],
-            size=naturalsize(bucket_content['Size']),
+            size=bucket_content['Size'],
             last_modified=bucket_content['LastModified']
         )
 
@@ -50,7 +50,10 @@ class S3Bucket(AWSResource):
     def json(self):
         data = self.__dict__
         data['bucket_size'] = naturalsize(self.bucket_size)
-        data['bucket_contents'] = {arn: bo.__dict__ for arn, bo in self.bucket_contents.items()}
+        data['bucket_contents'] = {key: {'key': value.key,
+                                         'last_modified': value.last_modified,
+                                         'size': naturalsize(value.size)}
+                                   for key, value in self.bucket_contents.items()}
         return data
 
 
