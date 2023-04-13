@@ -2,7 +2,6 @@ import datetime
 from dataclasses import dataclass
 from typing import Iterator, List
 
-
 from soft_mark_cloud.cloud.aws.core import AWSRegionalClient, AWSCreds, AWSResource
 
 
