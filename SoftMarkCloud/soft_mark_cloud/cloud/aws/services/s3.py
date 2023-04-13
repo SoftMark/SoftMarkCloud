@@ -27,8 +27,7 @@ class S3BucketObject:
     @property
     def json(self):
         data = self.__dict__
-        data['key'] = self.key,
-        data['last_modified'] = self.last_modified
+        data['last_modified'] = self.last_modified.isoformat()
         data['size'] = naturalsize(self.size)
         return data
 

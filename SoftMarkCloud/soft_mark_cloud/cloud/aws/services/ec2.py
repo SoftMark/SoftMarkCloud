@@ -2,6 +2,7 @@ import datetime
 from dataclasses import dataclass
 from typing import Iterator, List
 
+
 from soft_mark_cloud.cloud.aws.core import AWSRegionalClient, AWSCreds, AWSResource
 
 
@@ -25,6 +26,12 @@ class EC2Instance(AWSResource):
             instance_state=data['State']['Name'],
             subnet_id=data['SubnetId'],
             launch_time=data['LaunchTime'])
+
+    @property
+    def json(self):
+        data = self.__dict__
+        data['launch_time'] = self.launch_time.isoformat()
+        return data
 
 
 class EC2Client(AWSRegionalClient):
