@@ -1,0 +1,18 @@
+{% load static %}
+
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'cloud/css/auth.css' %}">
+{% endblock %}
+
+
+<div class="cloud_content">
+    <form method="post" class="auth-form">
+        <h2 class="title-page">{% block title-page %}AWS Environment{% endblock %}</h2>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="error-message">
+            <ul></ul>
+        </div>
+        <button type="submit" class="send-form">{% block send-form %}NEW{% endblock %}</button>
+    </form>
+</div>

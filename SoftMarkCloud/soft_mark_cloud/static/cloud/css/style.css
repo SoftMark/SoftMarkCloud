@@ -1,15 +1,28 @@
+html {
+    height: 100%;
+}
 body {
     font-family: 'Open Sans', sans-serif;
+    height: 100%;
     color: #121212;
+    margin: 0;
 }
+
 .header {
+    height: 5%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding-left: 1%;
+    padding-right: 1%;
     background-color: #fff;
     box-shadow: 0px 3px 6px #ccc;
 }
+
+main {
+    height: 95%;
+}
+
 .logo {
     font-size: 24px;
     font-weight: bold;
@@ -34,21 +47,59 @@ body {
     text-decoration: underline;
 }
 .title-page {
-    font-size: 36px;
+    font-size: 25px;
     font-weight: bold;
-    margin: 50px 0 20px 0;
 }
-footer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 50px;
-    background-color: #f7f7f7;
-    margin-top: 50px;
-}
+
 footer p {
     font-size: 16px;
     color: #121212;
     text-align: center;
     margin: 0;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    height: 5%;
+    width: 85%;
+    background-color: #f2f2f2;
+    text-align: center;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.sidenav {
+    display: block;
+    height: 100%;
+    width: 15%;
+    position: relative;
+    z-index: 1;
+    background-color: #111;
+    overflow-x: hidden;
+    float: left;
+    bottom: 0;
+}
+
+.sidenav a {
+    padding: 6px 8px 6px 16px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+}
+
+.sidenav a:hover {
+    color: #f1f1f1;
+}
+
+.cloud_content {
+    overflow: auto;
+    display: block;
+    height: 95%;
+    width: 85%;
+    position: relative;
+    float: left;
 }

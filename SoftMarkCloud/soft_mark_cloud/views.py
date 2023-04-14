@@ -55,6 +55,13 @@ def index(request):
     return render(request, 'index.html', {'user': current_user})
 
 
+@api_view(['GET'])
+@login_required
+def account_manager(request):
+    current_user = request.user
+    return render(request, 'account_manager.html', {'user': current_user})
+
+
 @api_view(['GET', 'POST'])
 @user_passes_test(lambda u: not u.is_authenticated, login_url='home')
 def sign_up(request):
