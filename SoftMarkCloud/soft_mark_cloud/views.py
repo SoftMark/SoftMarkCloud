@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
@@ -65,28 +66,41 @@ def logout_user(request):
 @login_required
 def account_manager(request):
     current_user = request.user
+    try:
+        creds = AWSCredentials.objects.get(user=current_user)
+    except ObjectDoesNotExist:
+        creds = None
+
     if request.method == 'GET':
-        try:
-            creds = AWSCredentials.objects.get(user=current_user)
-        except ObjectDoesNotExist:
-            resp = {'status': 404, 'form': AWSCredentialsForm()}
+        if creds:
+            resp = {'status': 200, 'creds': creds, 'form': AWSCredentialsForm()}
         else:
-            resp = {'status': 200, 'creds': creds}
+            resp = {'status': 404, 'form': AWSCredentialsForm()}
 
     elif request.method == 'POST':
-        form = AWSCredentialsForm(request.POST)
-        resp = {'status': 404, 'form': AWSCredentialsForm()}
+        if creds:
+            resp = {'status': 200, 'creds': creds, 'form': AWSCredentialsForm()}
+        else:
+            form = AWSCredentialsForm(request.POST)
+            if form.is_valid():
+                creds = form.instance
+                creds.user = current_user
+                creds.save()
+                resp = {'status': 200, 'creds': creds}
+            else:
+                resp = {'status': 404, 'form': form}
 
-    elif request.method == 'DELETE':
-        creds = AWSCredentials.objects.get(user=current_user)
-        creds.delete()
+    else:  # request.method == 'DELETE':
+        if creds:
+            creds.delete()
         resp = {'status': 404, 'form': AWSCredentialsForm()}
 
     return render(request, 'account_manager.html', resp)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def aws_cloud_data(request):
+def cloud_view(request):
     """
     Echo request
 
@@ -108,12 +122,15 @@ def aws_cloud_data(request):
     try:
         creds_db = AWSCredentials.objects.get(user=request.user)
     except ObjectDoesNotExist:
-        return Response('AWS credentials not provided', status=401)
+        response, status = 'AWS credentials not provided', 401
+    else:
+        creds = AWSCreds(
+            aws_access_key_id=creds_db.aws_access_key_id,
+            aws_secret_access_key=creds_db.aws_secret_access_key)
 
-    creds = AWSCreds(
-        aws_access_key_id=creds_db.aws_access_key_id,
-        aws_secret_access_key=creds_db.aws_secret_access_key)
+        collector = AWSCollector(credentials=creds)
+        aws_data = collector.collect_all()
+        aws_data = json.dumps(aws_data, indent=4)
+        response, status = aws_data, 200
 
-    collector = AWSCollector(credentials=creds)
-    aws_data = collector.collect_all()
-    return Response(aws_data, status=200)
+    return render(request, 'cloud_view.html', {'response': response, 'status': status})

@@ -59,6 +59,9 @@ class LoginForm(AuthenticationForm):
 
 
 class AWSCredentialsForm(forms.ModelForm):
+    aws_access_key_id = forms.CharField(min_length=20, max_length=20, label='Access key id')
+    aws_secret_access_key = forms.CharField(min_length=40, max_length=40, label='Secret Access key')
+
     class Meta:
         model = AWSCredentials
         fields = ['aws_access_key_id', 'aws_secret_access_key']
