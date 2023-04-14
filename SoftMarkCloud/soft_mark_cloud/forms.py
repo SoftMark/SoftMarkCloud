@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
 
-from soft_mark_cloud.models import User
+from soft_mark_cloud.models import User, AWSCredentials
 
 
 class SignUpForm(UserCreationForm):
@@ -56,3 +56,9 @@ class LoginForm(AuthenticationForm):
             self.confirm_login_allowed(authenticated_user)
 
         return self.cleaned_data
+
+
+class AWSCredentialsForm(forms.ModelForm):
+    class Meta:
+        model = AWSCredentials
+        fields = ['aws_access_key_id', 'aws_secret_access_key']

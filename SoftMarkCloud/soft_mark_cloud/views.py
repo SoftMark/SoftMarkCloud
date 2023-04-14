@@ -9,43 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from soft_mark_cloud.cloud.aws import AWSCreds
 from soft_mark_cloud.cloud.aws.collector import AWSCollector
-from soft_mark_cloud.forms import SignUpForm, LoginForm
+from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm
 from soft_mark_cloud.models import AWSCredentials
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def aws_cloud_data(request):
-    """
-    Echo request
-
-    Returns
-    -------
-    Out:
-        Response the same as request
-
-    Examples
-    --------
-    >>> import requests
-    >>> requests.get(
-    ...     url='http://127.0.0.1:8000/api/cloud_data',
-    ...     headers={'Authorization': 'Token db18760656b95b62dfaa788975ab67dd8c062562'}
-    ... )
-    Out:
-    <Response [200]>
-    """
-    try:
-        creds_db = AWSCredentials.objects.get(user=request.user)
-    except ObjectDoesNotExist:
-        return Response('AWS credentials not provided', status=401)
-
-    creds = AWSCreds(
-        aws_access_key_id=creds_db.aws_access_key_id,
-        aws_secret_access_key=creds_db.aws_secret_access_key)
-
-    collector = AWSCollector(credentials=creds)
-    aws_data = collector.collect_all()
-    return Response(aws_data, status=200)
 
 
 @api_view(['GET'])
@@ -53,13 +18,6 @@ def aws_cloud_data(request):
 def index(request):
     current_user = request.user
     return render(request, 'index.html', {'user': current_user})
-
-
-@api_view(['GET'])
-@login_required
-def account_manager(request):
-    current_user = request.user
-    return render(request, 'account_manager.html', {'user': current_user})
 
 
 @api_view(['GET', 'POST'])
@@ -101,3 +59,61 @@ def sign_in(request):
 def logout_user(request):
     logout(request)
     return redirect('home')
+
+
+@api_view(['GET', 'POST', 'DELETE'])
+@login_required
+def account_manager(request):
+    current_user = request.user
+    if request.method == 'GET':
+        try:
+            creds = AWSCredentials.objects.get(user=current_user)
+        except ObjectDoesNotExist:
+            resp = {'status': 404, 'form': AWSCredentialsForm()}
+        else:
+            resp = {'status': 200, 'creds': creds}
+
+    elif request.method == 'POST':
+        form = AWSCredentialsForm(request.POST)
+        resp = {'status': 404, 'form': AWSCredentialsForm()}
+
+    elif request.method == 'DELETE':
+        creds = AWSCredentials.objects.get(user=current_user)
+        creds.delete()
+        resp = {'status': 404, 'form': AWSCredentialsForm()}
+
+    return render(request, 'account_manager.html', resp)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def aws_cloud_data(request):
+    """
+    Echo request
+
+    Returns
+    -------
+    Out:
+        Response the same as request
+
+    Examples
+    --------
+    >>> import requests
+    >>> requests.get(
+    ...     url='http://127.0.0.1:8000/api/cloud_data',
+    ...     headers={'Authorization': 'Token db18760656b95b62dfaa788975ab67dd8c062562'}
+    ... )
+    Out:
+    <Response [200]>
+    """
+    try:
+        creds_db = AWSCredentials.objects.get(user=request.user)
+    except ObjectDoesNotExist:
+        return Response('AWS credentials not provided', status=401)
+
+    creds = AWSCreds(
+        aws_access_key_id=creds_db.aws_access_key_id,
+        aws_secret_access_key=creds_db.aws_secret_access_key)
+
+    collector = AWSCollector(credentials=creds)
+    aws_data = collector.collect_all()
+    return Response(aws_data, status=200)
