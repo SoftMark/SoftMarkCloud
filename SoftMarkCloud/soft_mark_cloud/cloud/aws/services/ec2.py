@@ -20,7 +20,7 @@ class EC2Instance(AWSResource):
     def from_api_dict(cls, data: dict) -> 'EC2Instance':
         return cls(
             arn=data['InstanceArn'],
-            resource_type='instance',
+            resource_type='ec2_instance',
             instance_id=data['InstanceId'],
             instance_type=data['InstanceType'],
             instance_state=data['State']['Name'],

@@ -49,7 +49,7 @@ class S3Bucket(AWSResource):
     def from_api_dict(cls, bucket: dict) -> 'S3Bucket':
         return cls(
             arn=f'arn:aws:s3:::{bucket["Name"]}',
-            resource_type='s3',
+            resource_type='s3_bucket',
             name=bucket['Name'],
             creation_date=bucket['CreationDate'],
         )
