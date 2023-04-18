@@ -11,6 +11,7 @@ class AWSResource:
     AWS resource dataclass
     """
     arn: str
+    resource_type: str
 
     @property
     def json(self):
