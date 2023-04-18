@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from soft_mark_cloud.cloud.aws.core import AWSRegionalClient, AWSCreds, AWSResource
-from typing import Iterator, Dict
+from typing import Iterator, Dict, List
 
 
 @dataclass
@@ -98,3 +98,6 @@ class VPCClient(AWSRegionalClient):
             vpc['Arn'] = self.generate_vpc_arn(vpc['VpcId'])
             vpc['Subnets'] = self.list_subnets_for_vpc(vpc['VpcId'])
             yield VPC.from_api_dict(vpc)
+
+    def collect_resources(self) -> List[VPC]:
+        return list(self.describe_vpc())

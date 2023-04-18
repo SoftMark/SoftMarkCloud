@@ -14,6 +14,7 @@ class EC2Instance(AWSResource):
     instance_type: str
     instance_state: str
     subnet_id: str
+    vpc_id: str
     launch_time: datetime.datetime
 
     @classmethod
@@ -25,6 +26,7 @@ class EC2Instance(AWSResource):
             instance_type=data['InstanceType'],
             instance_state=data['State']['Name'],
             subnet_id=data['SubnetId'],
+            vpc_id=data['VpcId'],
             launch_time=data['LaunchTime'])
 
     @property
