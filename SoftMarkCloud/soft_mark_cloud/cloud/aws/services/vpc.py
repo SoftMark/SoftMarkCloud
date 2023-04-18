@@ -7,6 +7,7 @@ from typing import Iterator, Dict
 class Subnet(AWSResource):
     vpc_id: str
     subnet_id: str
+    availability_zone: str
 
     @classmethod
     def from_api_dict(cls, subnet: dict) -> 'Subnet':
@@ -14,7 +15,8 @@ class Subnet(AWSResource):
             arn=subnet['Arn'],
             resource_type='subnet',
             vpc_id=subnet['VpcId'],
-            subnet_id=subnet['SubnetId']
+            subnet_id=subnet['SubnetId'],
+            availability_zone=subnet['AvailabilityZone']
         )
 
 
@@ -95,4 +97,4 @@ class VPCClient(AWSRegionalClient):
         for vpc in response['Vpcs']:
             vpc['Arn'] = self.generate_vpc_arn(vpc['VpcId'])
             vpc['Subnets'] = self.list_subnets_for_vpc(vpc['VpcId'])
-            yield from [VPC.from_api_dict(vpc)]
+            yield VPC.from_api_dict(vpc)
