@@ -8,7 +8,7 @@ class User(AbstractUser):
 
 
 class AWSCredentials(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     aws_access_key_id = models.CharField(max_length=256)
     aws_secret_access_key = models.CharField(max_length=256)
 

@@ -3,7 +3,12 @@
 
 {% block title %}Main{% endblock %}
 
+
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'cloud/css/aws_form.css' %}">
+{% endblock %}
+
 {% block content %}
     {% include 'includes/sidenav.html' %}
-    {% include 'includes/cloud_content.html' %}
+    {% include 'includes/aws_form.html' %}
 {% endblock %}
