@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass, field
-from typing import Iterator, List, Dict
+from typing import Iterator, List
 
 from soft_mark_cloud.cloud.aws.core import AWSRegionalClient, AWSCreds, AWSResource
 
@@ -41,7 +41,7 @@ class Subnet(AWSResource):
     vpc_id: str
     subnet_id: str
     availability_zone: str
-    ec2_instance: EC2Instance = field(default_factory=dict)
+    ec2_instances: List[EC2Instance] = field(default_factory=list)
 
     @classmethod
     def from_api_dict(cls, subnet: dict) -> 'Subnet':
@@ -50,8 +50,13 @@ class Subnet(AWSResource):
             resource_type='subnet',
             vpc_id=subnet['VpcId'],
             subnet_id=subnet['SubnetId'],
-            availability_zone=subnet['AvailabilityZone']
-        )
+            availability_zone=subnet['AvailabilityZone'])
+
+    @property
+    def json(self):
+        data = self.__dict__
+        data['ec2_instances'] = [bo.json for bo in self.ec2_instances]
+        return data
 
 
 @dataclass
@@ -73,6 +78,12 @@ class VPC(AWSResource):
             is_default=vpc['IsDefault'],
             state=vpc['State'],
             subnets=vpc['Subnets'])
+
+    @property
+    def json(self):
+        data = self.__dict__
+        data['subnets'] = [bo.json for bo in self.subnets]
+        return data
 
 
 class EC2Client(AWSRegionalClient):
@@ -105,17 +116,21 @@ class EC2Client(AWSRegionalClient):
         return f'arn:aws:ec2:{self.region_name}:{self.account_id}:vpc/{subnet_id}'
 
     def list_subnets_for_vpc(self, vpc_id: str) -> List[Subnet]:
-        # We only search for subnets that match the specified vpc
-        response = self.boto3_client.describe_subnets(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
+        ec2_instances = list(self.describe_ec2_instances())
+
+        # Get subnet data from API. We only search for subnets that match the specified vpc
         subnets = []
-        for subnet in response['Subnets']:
-            subnet['Arn'] = self.generate_subnet_arn(subnet['SubnetId'])
-            subnet_obj = Subnet.from_api_dict(subnet)
-            ec2_instances = list(self.describe_ec2_instances())
-            for instance in ec2_instances:
-                if instance.subnet_id == subnet['SubnetId']:
-                    subnet_obj.ec2_instance = instance
+        response = self.boto3_client.describe_subnets(
+            Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
+
+        # Create subnet objects and attach EC2 instances
+        for subnet_data in response['Subnets']:
+            subnet_data['Arn'] = self.generate_subnet_arn(subnet_data['SubnetId'])
+            subnet_obj = Subnet.from_api_dict(subnet_data)
+            subnet_instances = [i for i in ec2_instances if i.subnet_id == subnet_data['SubnetId']]
+            subnet_obj.ec2_instances.extend(subnet_instances)
             subnets.append(subnet_obj)
+
         return subnets
 
     # TODO: fetch more EC2 instances data
@@ -144,6 +159,22 @@ class EC2Client(AWSRegionalClient):
                 yield EC2Instance.from_api_dict(instance_data)
 
     def describe_vpc(self) -> Iterator[VPC]:
+        """
+        Collects VPCs for client region
+
+        Examples
+        --------
+        >>> from soft_mark_cloud.cloud.aws.services.ec2 import AWSCreds, EC2Client
+        ... creds = AWSCreds(
+        ...     aws_access_key_id='{aws_access_key_id}',
+        ...     aws_secret_access_key='{aws_secret_access_key}'
+        ... )
+        ... client = EC2Client(credentials=creds, region_name='{region_name}')
+        ... vpcs = list(client.describe_vpc())
+        ... print(vpcs)
+        out:
+            List of vpc with corresponding subnets.
+        """
         response = self.boto3_client.describe_vpcs()
         for vpc in response['Vpcs']:
             vpc['Arn'] = self.generate_vpc_arn(vpc['VpcId'])

@@ -56,8 +56,7 @@ class AWSClient(CloudClient):
         Base collect all method
         """
         return {
-            self.service_name: {
-                i.arn: i.json for i in self.collect_resources()}}
+            self.service_name: [i.json for i in self.collect_resources()]}
 
 
 class AWSGlobalClient(AWSClient):

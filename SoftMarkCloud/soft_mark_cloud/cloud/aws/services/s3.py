@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass, field
-from typing import Iterator, Dict, List
+from typing import Iterator, List
 
 from soft_mark_cloud.cloud.aws.core import AWSGlobalClient, AWSCreds, AWSResource
 
@@ -39,11 +39,11 @@ class S3Bucket(AWSResource):
     """
     name: str
     creation_date: datetime.datetime
-    bucket_contents: Dict[str, S3BucketObject] = field(default_factory=dict)
+    bucket_contents: List[S3BucketObject] = field(default_factory=list)
 
     @property
     def bucket_size(self) -> int:
-        return sum(i.size for i in self.bucket_contents.values())
+        return sum(bucket_content.size for bucket_content in self.bucket_contents)
 
     @classmethod
     def from_api_dict(cls, bucket: dict) -> 'S3Bucket':
@@ -58,7 +58,7 @@ class S3Bucket(AWSResource):
     def json(self):
         data = self.__dict__
         data['bucket_size'] = naturalsize(self.bucket_size)
-        data['bucket_contents'] = [bo.json for bo in sorted(self.bucket_contents.values(), key=lambda bo: -bo.size)]
+        data['bucket_contents'] = [bo.json for bo in sorted(self.bucket_contents, key=lambda bo: -bo.size)]
         return data
 
 
@@ -95,8 +95,7 @@ class S3Client(AWSGlobalClient):
         resp: dict = self.boto3_client.list_buckets()
         for bucket_dict in resp['Buckets']:
             s3_bucket = S3Bucket.from_api_dict(bucket_dict)
-            bucket_contents = self.list_s3_buckets_contents(s3_bucket.name)
-            s3_bucket.bucket_contents = {bc.key: bc for bc in bucket_contents}
+            s3_bucket.bucket_contents = self.list_s3_buckets_contents(s3_bucket.name)
             yield s3_bucket
 
     def collect_resources(self) -> List[S3Bucket]:
