@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Main{% endblock %}
+
+{% block content %}
+    {% include 'includes/sidenav.html' %}
+    {% if status == 200 %}
+        <div class="cloud_content">
+            <pre>{{ response|safe }}</pre>
+        </div>
+    {% else %}
+        <h2 style="color: #dc3545; margin: 0">{{ status }}. {{ response }}</h2>
+    {% endif %}
+{% endblock %}

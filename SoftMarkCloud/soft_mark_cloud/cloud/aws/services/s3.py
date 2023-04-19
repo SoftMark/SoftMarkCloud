@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass, field
-from typing import Iterator, List
+from typing import Iterator, Dict, List
 
 from soft_mark_cloud.cloud.aws.core import AWSGlobalClient, AWSCreds, AWSResource
 
@@ -58,6 +58,7 @@ class S3Bucket(AWSResource):
     def json(self):
         data = self.__dict__
         data['bucket_size'] = naturalsize(self.bucket_size)
+        data['creation_date'] = self.creation_date.isoformat()
         data['bucket_contents'] = [bo.json for bo in sorted(self.bucket_contents, key=lambda bo: -bo.size)]
         return data
 

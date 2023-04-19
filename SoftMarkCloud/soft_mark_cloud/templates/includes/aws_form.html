@@ -1,0 +1,32 @@
+{% load static %}
+
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'cloud/css/auth.css' %}">
+{% endblock %}
+
+
+<div class="cloud_content">
+    {% if status == 200 %}
+        <h2 class="title-page">
+            AWS Access key id: {{ creds.aws_access_key_id }}
+        </h2>
+        <h2 class="title-page">
+            AWS secret Access key: {{ creds.aws_secret_access_key }}
+        </h2>
+        <button id="delete-button">Delete</button>
+    {% else %}
+        <form method="post" class="auth-form">
+            <h2 class="title-page">{% block title-page %}AWS Environment{% endblock %}</h2>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="error-message">
+                <ul></ul>
+            </div>
+            <button type="submit" class="send-form">{% block send-form %}NEW{% endblock %}</button>
+        </form>
+    {%  endif %}
+</div>
+
+{% block script %}
+    <script src="{% static 'cloud/js/aws_creds_delete.js' %}"></script>
+{% endblock %}
