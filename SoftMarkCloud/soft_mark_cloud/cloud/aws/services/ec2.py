@@ -62,7 +62,7 @@ class VPC(AWSResource):
     id: str
     is_default: bool
     state: str
-    subnets: Dict[str, Subnet]
+    subnets: List[Subnet]
 
     @classmethod
     def from_api_dict(cls, vpc: dict) -> 'VPC':
@@ -104,10 +104,10 @@ class EC2Client(AWSRegionalClient):
         """
         return f'arn:aws:ec2:{self.region_name}:{self.account_id}:vpc/{subnet_id}'
 
-    def list_subnets_for_vpc(self, vpc_id: str) -> Dict[str, Subnet]:
+    def list_subnets_for_vpc(self, vpc_id: str) -> List[Subnet]:
         # We only search for subnets that match the specified vpc
         response = self.boto3_client.describe_subnets(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
-        subnets_dict = {}
+        subnets = []
         for subnet in response['Subnets']:
             subnet['Arn'] = self.generate_subnet_arn(subnet['SubnetId'])
             subnet_obj = Subnet.from_api_dict(subnet)
@@ -115,8 +115,8 @@ class EC2Client(AWSRegionalClient):
             for instance in ec2_instances:
                 if instance.subnet_id == subnet['SubnetId']:
                     subnet_obj.ec2_instance = instance
-            subnets_dict[subnet_obj.arn] = subnet_obj
-        return subnets_dict
+            subnets.append(subnet_obj)
+        return subnets
 
     # TODO: fetch more EC2 instances data
     def describe_ec2_instances(self) -> Iterator[EC2Instance]:
