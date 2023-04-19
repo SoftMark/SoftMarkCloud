@@ -13,7 +13,7 @@
         <h2 class="title-page">
             AWS secret Access key: {{ creds.aws_secret_access_key }}
         </h2>
-        <button id="delete-button">Delete</button>
+        <button class="btn btn-danger" id="delete-button">DELETE</button>
     {% else %}
         <form method="post" class="auth-form">
             <h2 class="title-page">{% block title-page %}AWS Environment{% endblock %}</h2>

@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from soft_mark_cloud.cloud.aws import AWSCreds
 from soft_mark_cloud.cloud.aws.collector import AWSCollector
 from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm
-from soft_mark_cloud.models import AWSCredentials
+from soft_mark_cloud.models import AWSCredentials, AWSCloudData
 
 
 @api_view(['GET'])
@@ -93,6 +93,10 @@ def account_manager(request):
     else:  # request.method == 'DELETE':
         if creds:
             creds.delete()
+
+        if (cache := AWSCloudData.objects.filter(user=request.user)).exists():
+            cache.delete()
+
         resp = {'status': 404, 'form': AWSCredentialsForm()}
 
     return render(request, 'account_manager.html', resp)
@@ -123,7 +127,9 @@ def cloud_view(request):
         creds_db = AWSCredentials.objects.get(user=request.user)
     except ObjectDoesNotExist:
         response, status = 'AWS credentials not provided', 401
-    else:
+        return render(request, 'cloud_view.html', {'response': response, 'status': status})
+
+    if 'refresh' in request.GET:
         creds = AWSCreds(
             aws_access_key_id=creds_db.aws_access_key_id,
             aws_secret_access_key=creds_db.aws_secret_access_key)
@@ -131,6 +137,15 @@ def cloud_view(request):
         collector = AWSCollector(credentials=creds)
         aws_data = collector.collect_all()
         aws_data = json.dumps(aws_data, indent=4)
-        response, status = aws_data, 200
+        AWSCloudData(
+            user=request.user,
+            data_json=aws_data
+        ).save()
+    else:
+        try:
+            aws_data = AWSCloudData.objects.get(user=request.user).data_json
+        except ObjectDoesNotExist:
+            aws_data = 'No data'
 
+    response, status = aws_data, 200
     return render(request, 'cloud_view.html', {'response': response, 'status': status})
