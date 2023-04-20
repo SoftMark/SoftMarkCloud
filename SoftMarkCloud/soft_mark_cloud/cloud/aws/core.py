@@ -13,8 +13,14 @@ class AWSResource:
     arn: str
 
     @property
+    def resource_type(self) -> str:
+        return self.__class__.__name__.lower()
+
+    @property
     def json(self):
-        return self.__dict__
+        data = self.__dict__
+        data['resource_type'] = self.resource_type
+        return data
 
 
 @dataclass
@@ -55,8 +61,7 @@ class AWSClient(CloudClient):
         Base collect all method
         """
         return {
-            self.service_name: {
-                i.arn: i.json for i in self.collect_resources()}}
+            self.service_name: [i.json for i in self.collect_resources()]}
 
 
 class AWSGlobalClient(AWSClient):
