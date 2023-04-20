@@ -1,5 +1,3 @@
-// TODO: Implement import from cookie.js
-
 function getCookie(name) {
   var cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -22,20 +20,4 @@ function get_csrftoken() {
         alert("Error. Sing Out and try again. CSRFToken not found.")
     }
     return token
-}
-
-const token = get_csrftoken();
-const del_button = document.getElementById("delete-button");
-
-if (del_button) {
-    del_button.addEventListener("click", function() {
-        fetch("/account_manager/",
-            {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': token
-                },
-            });
-        location.href = "/account_manager/";
-    });
 }

@@ -7,9 +7,14 @@
     {% include 'includes/sidenav.html' %}
     {% if status == 200 %}
         <div class="cloud_content">
+            <button class="w-100 btn btn-lg btn-primary" id="refresh-button">REFRESH</button>
             <pre>{{ response|safe }}</pre>
         </div>
     {% else %}
         <h2 style="color: #dc3545; margin: 0">{{ status }}. {{ response }}</h2>
     {% endif %}
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'cloud/js/aws_data_refresh.js' %}"></script>
 {% endblock %}
