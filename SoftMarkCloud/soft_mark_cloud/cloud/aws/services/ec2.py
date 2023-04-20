@@ -53,7 +53,7 @@ class Subnet(AWSResource):
     @property
     def json(self):
         data = super().json
-        data['ec2_instances'] = [bo.json for bo in self.ec2_instances]
+        data['ec2_instances'] = [ec2.json for ec2 in self.ec2_instances]
         return data
 
 
@@ -79,7 +79,7 @@ class VPC(AWSResource):
     @property
     def json(self):
         data = super().json
-        data['subnets'] = [bo.json for bo in self.subnets]
+        data['subnets'] = [s.json for s in self.subnets]
         return data
 
 

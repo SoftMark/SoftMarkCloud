@@ -43,7 +43,7 @@ class S3Bucket(AWSResource):
 
     @property
     def bucket_size(self) -> int:
-        return sum(bucket_content.size for bucket_content in self.bucket_contents)
+        return sum(bc.size for bc in self.bucket_contents)
 
     @classmethod
     def from_api_dict(cls, bucket: dict) -> 'S3Bucket':
