@@ -1,6 +1,24 @@
-from soft_mark_cloud.cloud.core import Credentials
+from dataclasses import dataclass
+
+from soft_mark_cloud.cloud.core import Credentials, CloudClient
 
 
-class GCPCredentials(Credentials):
-    aws_access_key_id: str
-    aws_secret_access_key: str
+@dataclass
+class GCPResource:
+    """
+    GCP resource dataclass
+    """
+    arn: str
+
+    @property
+    def json(self):
+        return self.__dict__
+
+
+@dataclass
+class GCPCreds(Credentials):
+    """
+    Credentials holder dataclass
+    """
+    gcp_access_key_id: str
+    gcp_secret_access_key: str
