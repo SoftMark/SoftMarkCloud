@@ -16,12 +16,16 @@ class EC2Instance(AWSResource):
     subnet_id: str
     vpc_id: str
     launch_time: datetime.datetime
+    resource_type_: str = 'ec2_instance'
+
+    @property
+    def resource_type(self) -> str:
+        return self.resource_type_
 
     @classmethod
     def from_api_dict(cls, data: dict) -> 'EC2Instance':
         return cls(
             arn=data['InstanceArn'],
-            resource_type='ec2_instance',
             instance_id=data['InstanceId'],
             instance_type=data['InstanceType'],
             instance_state=data['State']['Name'],
@@ -42,12 +46,16 @@ class Subnet(AWSResource):
     subnet_id: str
     availability_zone: str
     ec2_instances: List[EC2Instance] = field(default_factory=list)
+    resource_type_: str = 'subnet'
+
+    @property
+    def resource_type(self) -> str:
+        return self.resource_type_
 
     @classmethod
     def from_api_dict(cls, subnet: dict) -> 'Subnet':
         return cls(
             arn=subnet['Arn'],
-            resource_type='subnet',
             vpc_id=subnet['VpcId'],
             subnet_id=subnet['SubnetId'],
             availability_zone=subnet['AvailabilityZone'])
@@ -68,12 +76,16 @@ class VPC(AWSResource):
     is_default: bool
     state: str
     subnets: List[Subnet]
+    resource_type_: str = 'vpc'
+
+    @property
+    def resource_type(self) -> str:
+        return self.resource_type_
 
     @classmethod
     def from_api_dict(cls, vpc: dict) -> 'VPC':
         return cls(
             arn=vpc['Arn'],
-            resource_type='vpc',
             id=vpc['VpcId'],
             is_default=vpc['IsDefault'],
             state=vpc['State'],
@@ -95,25 +107,11 @@ class EC2Client(AWSRegionalClient):
     def __init__(self, credentials: AWSCreds, region_name: str):
         super().__init__(credentials, region_name=region_name)
 
-    def generate_ec2_arn(self, instance_id: str) -> str:
+    def generate_arn(self, resource: str, resource_id: str) -> str:
         """
         Example: arn:aws:ec2:us-east-1:123456789012:instance/i-012abcd34efghi56
         """
-        return f'arn:aws:ec2:{self.region_name}:{self.account_id}:instance/{instance_id}'
-
-    def generate_vpc_arn(self, vpc_id: str) -> str:
-        """
-        Example:
-            arn:aws:ec2:us-east-1:123456789012:vpc/vpc-1234567890abcdef0
-        """
-        return f'arn:aws:ec2:{self.region_name}:{self.account_id}:vpc/{vpc_id}'
-
-    def generate_subnet_arn(self, subnet_id: str) -> str:
-        """
-        Example:
-            arn:aws:ec2:us-west-2:123456789012:subnet/subnet-1234567890abcdef0
-        """
-        return f'arn:aws:ec2:{self.region_name}:{self.account_id}:vpc/{subnet_id}'
+        return f'arn:aws:ec2:{self.region_name}:{self.account_id}:{resource}/{resource_id}'
 
     def list_subnets_for_vpc(self, vpc_id: str) -> List[Subnet]:
         ec2_instances = list(self.describe_ec2_instances())
@@ -125,9 +123,9 @@ class EC2Client(AWSRegionalClient):
 
         # Create subnet objects and attach EC2 instances
         for subnet_data in response['Subnets']:
-            subnet_data['Arn'] = self.generate_subnet_arn(subnet_data['SubnetId'])
+            subnet_data['Arn'] = self.generate_arn('subnet', subnet_data['SubnetId'])
             subnet_obj = Subnet.from_api_dict(subnet_data)
-            subnet_instances = [i for i in ec2_instances if i.subnet_id == subnet_data['SubnetId']]
+            subnet_instances = [i for i in ec2_instances if i.subnet_id == subnet_obj.subnet_id]
             subnet_obj.ec2_instances.extend(subnet_instances)
             subnets.append(subnet_obj)
 
@@ -154,7 +152,7 @@ class EC2Client(AWSRegionalClient):
         resp: dict = self.boto3_client.describe_instances()
         for reservation_data in resp.get('Reservations', []):
             for instance_data in reservation_data.get('Instances'):
-                instance_arn = self.generate_ec2_arn(instance_data['InstanceId'])
+                instance_arn = self.generate_arn('instance', instance_data['InstanceId'])
                 instance_data['InstanceArn'] = instance_arn
                 yield EC2Instance.from_api_dict(instance_data)
 
@@ -177,7 +175,7 @@ class EC2Client(AWSRegionalClient):
         """
         response = self.boto3_client.describe_vpcs()
         for vpc in response['Vpcs']:
-            vpc['Arn'] = self.generate_vpc_arn(vpc['VpcId'])
+            vpc['Arn'] = self.generate_arn('vpc', vpc['VpcId'])
             vpc['Subnets'] = self.list_subnets_for_vpc(vpc['VpcId'])
             yield VPC.from_api_dict(vpc)
 

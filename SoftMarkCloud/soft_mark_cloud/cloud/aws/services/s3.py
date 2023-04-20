@@ -1,6 +1,6 @@
 import datetime
 from dataclasses import dataclass, field
-from typing import Iterator, Dict, List
+from typing import Iterator, List
 
 from soft_mark_cloud.cloud.aws.core import AWSGlobalClient, AWSCreds, AWSResource
 
@@ -40,6 +40,11 @@ class S3Bucket(AWSResource):
     name: str
     creation_date: datetime.datetime
     bucket_contents: List[S3BucketObject] = field(default_factory=list)
+    resource_type_: str = 's3_bucket'
+
+    @property
+    def resource_type(self) -> str:
+        return self.resource_type_
 
     @property
     def bucket_size(self) -> int:
@@ -49,7 +54,6 @@ class S3Bucket(AWSResource):
     def from_api_dict(cls, bucket: dict) -> 'S3Bucket':
         return cls(
             arn=f'arn:aws:s3:::{bucket["Name"]}',
-            resource_type='s3_bucket',
             name=bucket['Name'],
             creation_date=bucket['CreationDate'],
         )
