@@ -16,11 +16,6 @@ class EC2Instance(AWSResource):
     subnet_id: str
     vpc_id: str
     launch_time: datetime.datetime
-    resource_type_: str = 'ec2_instance'
-
-    @property
-    def resource_type(self) -> str:
-        return self.resource_type_
 
     @classmethod
     def from_api_dict(cls, data: dict) -> 'EC2Instance':
@@ -35,7 +30,7 @@ class EC2Instance(AWSResource):
 
     @property
     def json(self):
-        data = self.__dict__
+        data = super().json
         data['launch_time'] = self.launch_time.isoformat()
         return data
 
@@ -46,11 +41,6 @@ class Subnet(AWSResource):
     subnet_id: str
     availability_zone: str
     ec2_instances: List[EC2Instance] = field(default_factory=list)
-    resource_type_: str = 'subnet'
-
-    @property
-    def resource_type(self) -> str:
-        return self.resource_type_
 
     @classmethod
     def from_api_dict(cls, subnet: dict) -> 'Subnet':
@@ -62,7 +52,7 @@ class Subnet(AWSResource):
 
     @property
     def json(self):
-        data = self.__dict__
+        data = super().json
         data['ec2_instances'] = [bo.json for bo in self.ec2_instances]
         return data
 
@@ -76,11 +66,6 @@ class VPC(AWSResource):
     is_default: bool
     state: str
     subnets: List[Subnet]
-    resource_type_: str = 'vpc'
-
-    @property
-    def resource_type(self) -> str:
-        return self.resource_type_
 
     @classmethod
     def from_api_dict(cls, vpc: dict) -> 'VPC':
@@ -93,7 +78,7 @@ class VPC(AWSResource):
 
     @property
     def json(self):
-        data = self.__dict__
+        data = super().json
         data['subnets'] = [bo.json for bo in self.subnets]
         return data
 
@@ -107,11 +92,11 @@ class EC2Client(AWSRegionalClient):
     def __init__(self, credentials: AWSCreds, region_name: str):
         super().__init__(credentials, region_name=region_name)
 
-    def generate_arn(self, resource: str, resource_id: str) -> str:
+    def generate_arn(self, resource_type: str, resource_id: str) -> str:
         """
         Example: arn:aws:ec2:us-east-1:123456789012:instance/i-012abcd34efghi56
         """
-        return f'arn:aws:ec2:{self.region_name}:{self.account_id}:{resource}/{resource_id}'
+        return f'arn:aws:ec2:{self.region_name}:{self.account_id}:{resource_type}/{resource_id}'
 
     def list_subnets_for_vpc(self, vpc_id: str) -> List[Subnet]:
         ec2_instances = list(self.describe_ec2_instances())

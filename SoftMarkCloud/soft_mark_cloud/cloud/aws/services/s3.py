@@ -40,11 +40,6 @@ class S3Bucket(AWSResource):
     name: str
     creation_date: datetime.datetime
     bucket_contents: List[S3BucketObject] = field(default_factory=list)
-    resource_type_: str = 's3_bucket'
-
-    @property
-    def resource_type(self) -> str:
-        return self.resource_type_
 
     @property
     def bucket_size(self) -> int:
@@ -60,7 +55,7 @@ class S3Bucket(AWSResource):
 
     @property
     def json(self):
-        data = self.__dict__
+        data = super().json
         data['bucket_size'] = naturalsize(self.bucket_size)
         data['creation_date'] = self.creation_date.isoformat()
         data['bucket_contents'] = [bo.json for bo in sorted(self.bucket_contents, key=lambda bo: -bo.size)]
