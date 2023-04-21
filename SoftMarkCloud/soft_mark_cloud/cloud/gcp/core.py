@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from google.cloud import storage
+from google.cloud import compute_v1
 
 from soft_mark_cloud.cloud.core import Credentials, CloudClient
 
