@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from google.cloud import storage
 
 from soft_mark_cloud.cloud.core import Credentials, CloudClient
 
@@ -20,5 +21,13 @@ class GCPCreds(Credentials):
     """
     Credentials holder dataclass
     """
-    gcp_access_key_id: str
-    gcp_secret_access_key: str
+    type: str
+    project_id: str
+    private_key_id: str
+    private_key: str
+    client_email: str
+    client_id: str
+    auth_uri: str
+    token_uri: str
+    auth_provider_x509_cert_url: str
+    client_x509_cert_url: str
