@@ -100,3 +100,6 @@ class S3Client(AWSGlobalClient):
 
     def collect_resources(self) -> List[S3Bucket]:
         return list(self.list_s3_buckets())
+
+    def get_object_contents(self, bucket_name: str, object_path: str) -> bytes:
+        return self.boto3_client.get_object(Bucket=bucket_name, Key=object_path)['Body'].read()

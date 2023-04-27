@@ -143,3 +143,9 @@ def cloud_view(request):
 
     response, status = aws_data, 200
     return render(request, 'cloud_view.html', {'response': response, 'status': status})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cloud_storage(request):
+    pass
