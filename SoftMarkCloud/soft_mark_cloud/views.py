@@ -85,10 +85,22 @@ def account_manager(request):
         else:
             form = AWSCredentialsForm(request.POST)
             if form.is_valid():
-                creds = form.instance
-                creds.user = current_user
-                creds.save()
-                resp = {'status': 200, 'creds': creds}
+                try:
+                    creds_form = form.instance
+                    creds = AWSCreds(
+                        aws_access_key_id=creds_form.aws_access_key_id,
+                        aws_secret_access_key=creds_form.aws_secret_access_key)
+
+                    collector = AWSCollector(credentials=creds)
+                    aws_data = collector.collect_all()
+                    aws_data = json.dumps(aws_data, indent=4)
+                    AWSCache.save_cache(current_user, aws_data)
+
+                    creds_form.user = current_user
+                    creds_form.save()
+                    resp = {'status': 200, 'creds': creds}
+                except:
+                    resp = {'status': 403, 'creds': creds}
             else:
                 resp = {'status': 404, 'form': form}
 
