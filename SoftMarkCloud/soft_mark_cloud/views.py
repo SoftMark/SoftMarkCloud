@@ -1,16 +1,21 @@
 import json
+
+import botocore
+from botocore.exceptions import BotoCoreError
+
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from soft_mark_cloud.cloud.aws import AWSCreds
 from soft_mark_cloud.cloud.aws.cache import AWSCache
 from soft_mark_cloud.cloud.aws.collector import AWSCollector
+from soft_mark_cloud.cloud.aws.core import AWSClient
 
 from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm
 from soft_mark_cloud.models import AWSCredentials
@@ -91,16 +96,14 @@ def account_manager(request):
                         aws_access_key_id=creds_form.aws_access_key_id,
                         aws_secret_access_key=creds_form.aws_secret_access_key)
 
-                    collector = AWSCollector(credentials=creds)
-                    aws_data = collector.collect_all()
-                    aws_data = json.dumps(aws_data, indent=4)
-                    AWSCache.save_cache(current_user, aws_data)
+                    AWSClient(credentials=creds)
 
                     creds_form.user = current_user
                     creds_form.save()
                     resp = {'status': 200, 'creds': creds}
-                except:
-                    resp = {'status': 403, 'creds': creds}
+
+                except botocore.exceptions.ClientError as e:
+                    resp = {'status': 401, 'form': form, 'error': e}
             else:
                 resp = {'status': 404, 'form': form}
 
@@ -142,14 +145,19 @@ def cloud_view(request):
         return render(request, 'cloud_view.html', {'response': response, 'status': status})
 
     if 'refresh' in request.GET:
-        creds = AWSCreds(
-            aws_access_key_id=creds_db.aws_access_key_id,
-            aws_secret_access_key=creds_db.aws_secret_access_key)
+        try:
+            creds = AWSCreds(
+                aws_access_key_id=creds_db.aws_access_key_id,
+                aws_secret_access_key=creds_db.aws_secret_access_key)
 
-        collector = AWSCollector(credentials=creds)
-        aws_data = collector.collect_all()
-        aws_data = json.dumps(aws_data, indent=4)
-        AWSCache.save_cache(request.user, aws_data)
+            collector = AWSCollector(credentials=creds)
+            aws_data = collector.collect_all()
+            aws_data = json.dumps(aws_data, indent=4)
+            AWSCache.save_cache(request.user, aws_data)
+
+        except botocore.exceptions.ClientError as e:
+            response, status = e, 401
+            return render(request, 'cloud_view.html', {'response': response, 'status': status})
     else:
         aws_data = AWSCache.get_cache_data_json(request.user)
 
