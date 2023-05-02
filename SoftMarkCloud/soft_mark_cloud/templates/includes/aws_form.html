@@ -20,7 +20,7 @@
             {% csrf_token %}
             {{ form.as_p }}
             <div class="error-message">
-                <ul></ul>
+                <ul>{{ error }}</ul>
             </div>
             <button type="submit" class="send-form">{% block send-form %}NEW{% endblock %}</button>
         </form>

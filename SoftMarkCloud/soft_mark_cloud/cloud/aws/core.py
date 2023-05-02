@@ -2,6 +2,8 @@ import boto3
 from dataclasses import dataclass
 from typing import List
 
+from botocore.exceptions import ClientError
+
 from soft_mark_cloud.cloud.core import Credentials, CloudClient
 
 
@@ -30,6 +32,35 @@ class AWSCreds(Credentials):
     """
     aws_access_key_id: str
     aws_secret_access_key: str
+
+    @classmethod
+    def from_model_to_data(cls, model) -> 'AWSCreds':
+        return cls(
+            aws_access_key_id=model.aws_access_key_id,
+            aws_secret_access_key=model.aws_secret_access_key)
+
+
+class STSClient(CloudClient):
+    """
+    Client that allows manage authorisation and access to various resources.
+    """
+    service_name = 'sts'
+
+    def __init__(self, credentials: AWSCreds):
+        super().__init__(credentials)
+        self.boto3_client = boto3.client(self.service_name, **self.credentials.__dict__)
+
+    def validate_credentials(self) -> bool or tuple[bool, str]:
+        """
+        Check credentials
+        """
+        try:
+            self.boto3_client.get_caller_identity()
+            return True, 'Credentials are valid'
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            error_message = e.response['Error']['Message']
+            return False, f"{error_code}: {error_message}"
 
 
 class AWSClient(CloudClient):

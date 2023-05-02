@@ -1,21 +1,17 @@
 import json
-
-import botocore
-from botocore.exceptions import BotoCoreError
-
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from soft_mark_cloud.cloud.aws import AWSCreds
 from soft_mark_cloud.cloud.aws.cache import AWSCache
 from soft_mark_cloud.cloud.aws.collector import AWSCollector
-from soft_mark_cloud.cloud.aws.core import AWSClient
+from soft_mark_cloud.cloud.aws.core import STSClient
 
 from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm
 from soft_mark_cloud.models import AWSCredentials
@@ -90,20 +86,18 @@ def account_manager(request):
         else:
             form = AWSCredentialsForm(request.POST)
             if form.is_valid():
-                try:
-                    creds_form = form.instance
-                    creds = AWSCreds(
-                        aws_access_key_id=creds_form.aws_access_key_id,
-                        aws_secret_access_key=creds_form.aws_secret_access_key)
+                creds_form = form.instance
+                creds = AWSCreds.from_model_to_data(creds_form)
 
-                    AWSClient(credentials=creds)
+                sts_client = STSClient(creds)
+                check_creds = sts_client.validate_credentials()
+                if False in check_creds:
+                    resp = {'status': 403, 'error': check_creds[1]}
 
+                else:  # if True in check_creds:
                     creds_form.user = current_user
                     creds_form.save()
                     resp = {'status': 200, 'creds': creds}
-
-                except botocore.exceptions.ClientError as e:
-                    resp = {'status': 401, 'form': form, 'error': e}
             else:
                 resp = {'status': 404, 'form': form}
 
@@ -145,19 +139,19 @@ def cloud_view(request):
         return render(request, 'cloud_view.html', {'response': response, 'status': status})
 
     if 'refresh' in request.GET:
-        try:
-            creds = AWSCreds(
-                aws_access_key_id=creds_db.aws_access_key_id,
-                aws_secret_access_key=creds_db.aws_secret_access_key)
+        creds = AWSCreds.from_model_to_data(creds_db)
+        sts_client = STSClient(creds)
+        check_creds = sts_client.validate_credentials()
 
+        if False in check_creds:
+            response, status = check_creds[1], 403
+            return render(request, 'cloud_view.html', {'response': response, 'status': status})
+
+        else:  # if True in check_creds:
             collector = AWSCollector(credentials=creds)
             aws_data = collector.collect_all()
             aws_data = json.dumps(aws_data, indent=4)
             AWSCache.save_cache(request.user, aws_data)
-
-        except botocore.exceptions.ClientError as e:
-            response, status = e, 401
-            return render(request, 'cloud_view.html', {'response': response, 'status': status})
     else:
         aws_data = AWSCache.get_cache_data_json(request.user)
 
