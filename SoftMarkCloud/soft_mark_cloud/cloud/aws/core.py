@@ -67,7 +67,7 @@ class AWSClient(CloudClient):
     """
     AWS client abstract class
     """
-    service_name = 'sts'  # Default service name
+    service_name = None
 
     def __init__(self, credentials: AWSCreds, **kwargs):
         super().__init__(credentials)
