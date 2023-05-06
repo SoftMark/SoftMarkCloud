@@ -95,7 +95,7 @@ def account_manager(request):
                     creds_form.save()
                     resp = {'status': 200, 'creds': creds}
                 else:
-                    resp = {'status': 403, 'form': form, 'error': 'Ineffective AWS credentials'}
+                    resp = {'status': 401, 'form': form, 'error': 'Ineffective AWS credentials'}
             else:
                 resp = {'status': 404, 'form': form}
 
@@ -145,7 +145,7 @@ def cloud_view(request):
             AWSCache.save_cache(request.user, aws_data)
             response, status = aws_data, 200
         else:
-            response, status = 'Invalid AWS credentials', 403
+            response, status = 'Ineffective AWS credentials', 403
 
     else:
         aws_data = AWSCache.get_cache_data_json(request.user)
