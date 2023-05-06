@@ -1,8 +1,11 @@
 import boto3
+from botocore.exceptions import ClientError
+
 from dataclasses import dataclass
 from typing import List
 
 from soft_mark_cloud.cloud.core import Credentials, CloudClient
+from soft_mark_cloud.models import AWSCredentials
 
 
 @dataclass
@@ -30,6 +33,26 @@ class AWSCreds(Credentials):
     """
     aws_access_key_id: str
     aws_secret_access_key: str
+
+    @classmethod
+    def from_model(cls, model: 'AWSCredentials') -> 'AWSCreds':
+        return cls(
+            aws_access_key_id=model.aws_access_key_id,
+            aws_secret_access_key=model.aws_secret_access_key
+        )
+
+    @property
+    def is_valid(self) -> bool:
+        sts_client = boto3.client(
+            'sts',
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key
+        )
+        try:
+            sts_client.get_caller_identity()
+            return True
+        except ClientError:
+            return False
 
 
 class AWSClient(CloudClient):

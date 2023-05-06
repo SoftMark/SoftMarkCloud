@@ -5,7 +5,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from soft_mark_cloud.cloud.aws import AWSCreds
@@ -75,7 +74,11 @@ def account_manager(request):
 
     if request.method == 'GET':
         if creds:
-            resp = {'status': 200, 'creds': creds, 'form': AWSCredentialsForm()}
+            creds = AWSCreds.from_model(creds)
+            if creds.is_valid:
+                resp = {'status': 200, 'creds': creds, 'form': AWSCredentialsForm()}
+            else:
+                resp = {'status': 403, 'error': 'Ineffective AWS credentials', 'creds': creds}
         else:
             resp = {'status': 404, 'form': AWSCredentialsForm()}
 
@@ -85,10 +88,14 @@ def account_manager(request):
         else:
             form = AWSCredentialsForm(request.POST)
             if form.is_valid():
-                creds = form.instance
-                creds.user = current_user
-                creds.save()
-                resp = {'status': 200, 'creds': creds}
+                creds_form = form.instance
+                creds = AWSCreds.from_model(creds_form)
+                if creds.is_valid:
+                    creds_form.user = current_user
+                    creds_form.save()
+                    resp = {'status': 200, 'creds': creds}
+                else:
+                    resp = {'status': 401, 'form': form, 'error': 'Ineffective AWS credentials'}
             else:
                 resp = {'status': 404, 'form': form}
 
@@ -130,16 +137,18 @@ def cloud_view(request):
         return render(request, 'cloud_view.html', {'response': response, 'status': status})
 
     if 'refresh' in request.GET:
-        creds = AWSCreds(
-            aws_access_key_id=creds_db.aws_access_key_id,
-            aws_secret_access_key=creds_db.aws_secret_access_key)
+        creds = AWSCreds.from_model(creds_db)
+        if creds.is_valid:
+            collector = AWSCollector(credentials=creds)
+            aws_data = collector.collect_all()
+            aws_data = json.dumps(aws_data, indent=4)
+            AWSCache.save_cache(request.user, aws_data)
+            response, status = aws_data, 200
+        else:
+            response, status = 'Ineffective AWS credentials', 403
 
-        collector = AWSCollector(credentials=creds)
-        aws_data = collector.collect_all()
-        aws_data = json.dumps(aws_data, indent=4)
-        AWSCache.save_cache(request.user, aws_data)
     else:
         aws_data = AWSCache.get_cache_data_json(request.user)
+        response, status = aws_data, 200
 
-    response, status = aws_data, 200
     return render(request, 'cloud_view.html', {'response': response, 'status': status})
