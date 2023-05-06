@@ -111,7 +111,7 @@ class EC2Client(AWSRegionalClient):
             subnet_data['Arn'] = self.generate_arn('subnet', subnet_data['SubnetId'])
             subnet_obj = Subnet.from_api_dict(subnet_data)
             subnet_instances = [i for i in ec2_instances if i.subnet_id == subnet_obj.subnet_id]
-            subnet_obj.ec2_instances.extend(subnet_instances)
+            subnet_obj.ec2_instances = subnet_instances
             subnets.append(subnet_obj)
 
         return subnets

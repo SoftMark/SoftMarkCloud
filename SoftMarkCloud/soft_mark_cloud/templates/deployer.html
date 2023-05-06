@@ -10,8 +10,11 @@
 
 {% block content %}
     {% include 'includes/sidenav.html' %}
-    {% if status == 200 %}
+    {% if status == 204 %}
         {% include 'includes/deployer_form.html' %}
+    {% elif status == 200 %}
+        <h2 style="margin: 0">Deployment done successfully!</h2>
+        <a href="{{ instance_url }}">Instance url: {{ instance_url }}</a>
     {% else %}
         <h2 style="color: #dc3545; margin: 0">{{ status }}. {{ error_msg }}</h2>
     {% endif %}

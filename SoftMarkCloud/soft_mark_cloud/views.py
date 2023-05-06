@@ -160,18 +160,21 @@ def cloud_view(request):
 def deployer(request):
     current_user = request.user
     try:
-        creds = AWSCreds.from_model(AWSCredentials.objects.get(user=current_user))
+        creds = AWSCreds.from_model(
+            model_instance=AWSCredentials.objects.get(user=current_user))
     except ObjectDoesNotExist:
         resp = {'status': 401, 'error_msg': "AWS credentials not provided"}
         return render(request, 'deployer.html', resp)
 
     if request.method == 'GET':
-        resp = {'status': 200, 'form': TerraformSettingsForm()}
+        resp = {'status': 204, 'form': TerraformSettingsForm()}
     else:  # request.method == 'POST':
         form = TerraformSettingsForm(request.POST)
         if form.is_valid():
             settings = form.gen(creds)
-            AWSDeployer(settings).deploy()
-        resp = {'status': 200, 'form': form}
+            instance_url = AWSDeployer(settings).deploy()
+            resp = {'status': 200, 'instance_url': instance_url}
+        else:
+            resp = {'status': 204, 'form': form}
 
     return render(request, 'deployer.html', resp)

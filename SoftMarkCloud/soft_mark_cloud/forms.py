@@ -92,5 +92,5 @@ class TerraformSettingsForm(forms.Form):
         """
         return TerraformSettings(
             creds=creds,
-            resource_name=ObjectId().__str__(),
+            resource_name="instance-" + ObjectId().__str__(),
             **self.cleaned_data)

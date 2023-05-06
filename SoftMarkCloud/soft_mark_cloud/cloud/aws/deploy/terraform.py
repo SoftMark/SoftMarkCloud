@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from soft_mark_cloud.cloud.core import Deployer, DeploySettings
 from soft_mark_cloud.cloud.aws.core import AWSCreds
-from soft_mark_cloud.cloud.aws.core import AWSRegionalClient
 
 
 @dataclass
@@ -32,9 +31,10 @@ class TerraformSettings(DeploySettings):
 class AWSDeployer(Deployer):
     def __init__(self, settings: TerraformSettings):
         super(AWSDeployer, self).__init__(settings)
+        self.settings: TerraformSettings
         self.tf_path = str(Path(__file__).parent / 'tf')
         self.create_df_folder()
-        self.__client = AWSRegionalClient(settings.creds, settings.region)
+        self.account_id = self.settings.creds.get_account_id()
 
     def create_df_folder(self):
         if not os.path.exists(self.tf_path):
@@ -48,8 +48,9 @@ class AWSDeployer(Deployer):
 
     @property
     def tf_file_name(self):
+        self.settings: TerraformSettings
         return "{account_id}_{resource_name}.tf".format(
-            account_id=self.__client.account_id,
+            account_id=self.account_id,
             resource_name=self.settings.resource_name)
 
     @property
@@ -96,6 +97,10 @@ resource "aws_instance" "{resource_name}" {{
             sudo /env/bin/python manage.py migrate
             python manage.py runserver 0.0.0.0:8000
             EOF
+}}
+
+output "public_ip" {{
+  value = aws_instance.{resource_name}.public_ip
 }}"""\
             .format(
                 access_key=self.settings.creds.aws_access_key_id,
@@ -139,5 +144,11 @@ resource "aws_instance" "{resource_name}" {{
         self.terraform_apply()
         self.remove_tf_file()
 
-    def deploy(self):
+    def get_instance_public_ip(self) -> str:
+        res = subprocess.run(["terraform", "output", 'public_ip'], cwd=self.tf_path, capture_output=True, text=True)
+        return res.stdout.strip()[1:-1]
+
+    def deploy(self) -> str:
         self.create_instance()
+        ip = self.get_instance_public_ip()
+        return f"http://{ip}:8000"
