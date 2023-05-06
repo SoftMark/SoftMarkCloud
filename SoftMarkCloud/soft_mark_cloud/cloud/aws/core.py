@@ -35,7 +35,7 @@ class AWSCreds(Credentials):
     aws_secret_access_key: str
 
     @classmethod
-    def from_model(cls, model: 'AWSCredentials'):
+    def from_model(cls, model: 'AWSCredentials') -> 'AWSCreds':
         return cls(
             aws_access_key_id=model.aws_access_key_id,
             aws_secret_access_key=model.aws_secret_access_key
