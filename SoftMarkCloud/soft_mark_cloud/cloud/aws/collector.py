@@ -1,11 +1,10 @@
-import django
 import multiprocessing
 
+from soft_mark_cloud.models import User
 from soft_mark_cloud.cloud.aws.cache import AWSCache
 from soft_mark_cloud.cloud.aws.status import AWSStatusDao
 from soft_mark_cloud.cloud.core import CloudCollector
 from soft_mark_cloud.cloud.aws.core import AWSCreds, AWSRegionalClient, AWSGlobalClient
-from soft_mark_cloud.models import User
 
 
 class AWSCollector(CloudCollector):

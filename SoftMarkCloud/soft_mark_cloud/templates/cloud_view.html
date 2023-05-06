@@ -10,7 +10,13 @@
             {% if not refreshing %}
                 <button class="w-100 btn btn-lg btn-primary" id="refresh-button">REFRESH</button>
             {% else %}
-                <div class="alert alert-warning" role="alert">Refreshing ...</div>
+                <div class="alert alert-warning" role="alert">
+                    <div>
+                        <div style="float: left">Refreshing ...</div>
+                        <div class="loader"></div>
+                    </div>
+                </div>
+
             {% endif %}
             <pre>{{ response|safe }}</pre>
         </div>
