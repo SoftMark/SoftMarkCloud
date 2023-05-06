@@ -74,7 +74,11 @@ def account_manager(request):
 
     if request.method == 'GET':
         if creds:
-            resp = {'status': 200, 'creds': creds, 'form': AWSCredentialsForm()}
+            creds = AWSCreds.from_model(creds)
+            if creds.is_valid:
+                resp = {'status': 200, 'creds': creds, 'form': AWSCredentialsForm()}
+            else:
+                resp = {'status': 403, 'error': 'Ineffective AWS credentials', 'creds': creds}
         else:
             resp = {'status': 404, 'form': AWSCredentialsForm()}
 
@@ -91,7 +95,7 @@ def account_manager(request):
                     creds_form.save()
                     resp = {'status': 200, 'creds': creds}
                 else:
-                    resp = {'status': 403, 'form': form, 'error': 'Invalid AWS credentials'}
+                    resp = {'status': 403, 'form': form, 'error': 'Ineffective AWS credentials'}
             else:
                 resp = {'status': 404, 'form': form}
 

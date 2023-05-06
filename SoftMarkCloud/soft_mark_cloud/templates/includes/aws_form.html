@@ -14,6 +14,17 @@
             AWS secret Access key: {{ creds.aws_secret_access_key }}
         </h2>
         <button class="btn btn-danger" id="delete-button">DELETE</button>
+    {% elif status == 403 %}
+        <h2 class="title-page">
+            AWS Access key id: {{ creds.aws_access_key_id }}
+        </h2>
+        <h2 class="title-page">
+            AWS secret Access key: {{ creds.aws_secret_access_key }}
+        </h2>
+            <div class="error-message">
+                {{ error }}
+            </div>
+        <button class="btn btn-danger" id="delete-button">DELETE</button>
     {% else %}
         <form method="post" class="auth-form">
             <h2 class="title-page">{% block title-page %}AWS Environment{% endblock %}</h2>
@@ -21,6 +32,7 @@
             {{ form.as_p }}
             <div class="error-message">
                 <ul>{{ error }}</ul>
+                <ul>{{ creds }}</ul>
             </div>
             <button type="submit" class="send-form">{% block send-form %}NEW{% endblock %}</button>
         </form>
