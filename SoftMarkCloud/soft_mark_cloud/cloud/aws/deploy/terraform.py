@@ -132,6 +132,10 @@ output "public_ip" {{
         >>>     creds=creds,
         >>>     region='{region_name}',
 
+        >>>     git_url='{git_url}',
+        >>>     manage_path='{manage_path}',
+        >>>     requirements_path='{requirements_path}'
+
         >>>     resource_name='{resource_name}',
         >>>     instance_type='{instance_type}', # 't2.micro' for example
         >>> )
