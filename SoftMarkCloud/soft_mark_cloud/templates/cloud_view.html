@@ -7,7 +7,11 @@
     {% include 'includes/sidenav.html' %}
     {% if status == 200 %}
         <div class="cloud_content">
-            <button class="w-100 btn btn-lg btn-primary" id="refresh-button">REFRESH</button>
+            {% if not refreshing %}
+                <button class="w-100 btn btn-lg btn-primary" id="refresh-button">REFRESH</button>
+            {% else %}
+                <div class="alert alert-warning" role="alert">Refreshing ...</div>
+            {% endif %}
             <pre>{{ response|safe }}</pre>
         </div>
     {% else %}

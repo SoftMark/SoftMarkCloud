@@ -20,8 +20,24 @@ class AWSCredentials(models.Model):
 
 class AWSCloudData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    data_json = models.CharField(max_length=256)
+    data_json = models.TextField()
 
     @property
     def data(self):
         return json.loads(self.data_json)
+
+
+class AWSProcessStatus(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    process_name = models.CharField(max_length=256)
+    done = models.BooleanField(default=False)
+    details_json = models.TextField(null=True)
+
+    @property
+    def details(self):
+        if self.details_json:
+            return json.loads(self.details_json)
+        return None
+
+    class Meta:
+        unique_together = ('user', 'process_name')

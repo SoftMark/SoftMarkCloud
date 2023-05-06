@@ -26,7 +26,7 @@ class CloudCache:
         Saves cache for specified user
         """
         if isinstance(data, dict):
-            data = json.dumps(data)
+            data = json.dumps(data, indent=4)
 
         if cache := cls.get_cache(user):
             cache.data_json = data
