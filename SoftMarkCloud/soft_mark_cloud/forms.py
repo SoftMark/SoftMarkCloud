@@ -1,9 +1,13 @@
+from bson import ObjectId
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
 
 from soft_mark_cloud.models import User, AWSCredentials
+from soft_mark_cloud.cloud.aws.core import AWSCreds
+from soft_mark_cloud.cloud.aws.deploy.terraform import TerraformSettings
 
 
 class SignUpForm(UserCreationForm):
@@ -65,3 +69,28 @@ class AWSCredentialsForm(forms.ModelForm):
     class Meta:
         model = AWSCredentials
         fields = ['aws_access_key_id', 'aws_secret_access_key']
+
+
+class TerraformSettingsForm(forms.Form):
+    # TODO: add more regions
+    region = forms.ChoiceField(
+        choices=[('eu-central-1', 'Frankfurt (eu-central-1)'), ],
+        widget=forms.Select(attrs={'class': 'my-select'}))
+
+    # TODO: add more instance_types
+    instance_type = forms.ChoiceField(
+        choices=[('t2.micro', 't2.micro'), ],
+        widget=forms.Select(attrs={'class': 'my-select'}))
+
+    git_url = forms.CharField(label='Git url')
+    manage_path = forms.CharField(label='Path to `manage.py` directory')
+    requirements_path = forms.CharField(label='Path to `requirements.txt` file')
+
+    def gen(self, creds: AWSCreds) -> TerraformSettings:
+        """
+        Generates TerraformSettings instance from TerraformSettingsForm cleaned data
+        """
+        return TerraformSettings(
+            creds=creds,
+            resource_name=ObjectId().__str__(),
+            **self.cleaned_data)

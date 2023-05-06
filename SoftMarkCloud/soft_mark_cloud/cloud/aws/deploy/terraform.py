@@ -17,6 +17,13 @@ class TerraformSettings(DeploySettings):
     resource_name: str
     instance_type: str
 
+    git_url: str
+    manage_path: str
+
+    project_path: str = '/var/www/html/yourproject'
+
+    requirements_path: str = ''
+
     repository_url: str = None
 
     ami: str = 'ami-090f10efc254eaf55'  # Ubuntu ami
@@ -66,7 +73,29 @@ class AWSDeployer(Deployer):
 
 resource "aws_instance" "{resource_name}" {{
     ami           = "{ami}"
-    instance_type = "{instance_type}"   
+    instance_type = "{instance_type}"
+    key_name      = "terraform-key"
+    subnet_id     = "subnet-0b857da7631a9302e"
+    security_groups = ["sg-0b02b860a5a012468"]
+    
+    user_data     = <<-EOF
+            #!/bin/bash
+            sudo mkdir -p {project_path}
+            git clone {git_url} {project_path}
+            
+            sudo apt-get update
+            
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python3-venv
+            sudo apt-get -y install python3-django
+            python3 -m venv env
+            source /env/bin/activate
+            export ALLOWED_HOST=$(curl ifconfig.me)
+            pip3 install django
+            pip3 install -r {project_path}{requirements_path}
+            cd {project_path}{manage_path}
+            sudo /env/bin/python manage.py migrate
+            python manage.py runserver 0.0.0.0:8000
+            EOF
 }}"""\
             .format(
                 access_key=self.settings.creds.aws_access_key_id,
@@ -74,7 +103,11 @@ resource "aws_instance" "{resource_name}" {{
                 region=self.settings.region,
                 resource_name=self.settings.resource_name,
                 ami=self.settings.ami,
-                instance_type=self.settings.instance_type
+                instance_type=self.settings.instance_type,
+                git_url=self.settings.git_url,
+                project_path=self.settings.project_path,
+                manage_path=self.settings.manage_path,
+                requirements_path=self.settings.requirements_path
             )
 
         with open(self.tf_file_path, "w") as f:

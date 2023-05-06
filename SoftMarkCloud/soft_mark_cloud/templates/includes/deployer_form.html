@@ -1,0 +1,17 @@
+{% load static %}
+
+{% block stylesheet %}
+    <link rel="stylesheet" href="{% static 'cloud/css/auth.css' %}">
+{% endblock %}
+
+
+<div class="cloud_content">
+    <form method="post" class="auth-form">
+        <h2 class="title-page">{% block title-page %}Terraform settings{% endblock %}</h2>
+        {{ form.as_p }}
+        <div class="error-message">
+            <ul></ul>
+        </div>
+        <button type="submit" class="send-form">{% block send-form %}DEPLOY{% endblock %}</button>
+    </form>
+</div>
