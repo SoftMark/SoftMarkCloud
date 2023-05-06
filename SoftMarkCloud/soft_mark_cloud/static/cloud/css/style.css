@@ -91,7 +91,6 @@ main {
     width: 20px;
     height: 20px;
     animation: spin 2s linear infinite;
-    float: left;
     margin-left: 5px;
 }
 
