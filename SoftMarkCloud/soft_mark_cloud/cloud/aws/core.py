@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import List
 
 from soft_mark_cloud.cloud.core import Credentials, CloudClient
+from soft_mark_cloud.domain import DisplayItem, ItemsField
 from soft_mark_cloud.models import AWSCredentials
 
 
@@ -20,10 +21,16 @@ class AWSResource:
         return self.__class__.__name__.lower()
 
     @property
+    def domain(self) -> DisplayItem:
+        return DisplayItem(
+            name='AWSResource',
+            item_type=self.resource_type,
+            fields=[]
+        )
+
+    @property
     def json(self):
-        data = self.__dict__
-        data['resource_type'] = self.resource_type
-        return data
+        return self.domain.json
 
 
 @dataclass
@@ -78,12 +85,20 @@ class AWSClient(CloudClient):
         """
         raise NotImplementedError('Can`t call abstract method collect_resources')
 
-    def collect_all(self):
+    def collect_all(self) -> dict:
         """
         Base collect all method
         """
-        return {
-            self.service_name: [i.json for i in self.collect_resources()]}
+        return DisplayItem(
+            name=self.service_name,
+            item_type=self.service_name,
+            fields=[
+                ItemsField(
+                    name='resources',
+                    value=[r.domain for r in self.collect_resources()]
+                )
+            ]
+        ).json
 
 
 class AWSGlobalClient(AWSClient):

@@ -1,15 +1,19 @@
-import json
+import time
+from typing import Any
+
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from datetime import datetime
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from soft_mark_cloud.cloud.aws import AWSCreds
 from soft_mark_cloud.cloud.aws.cache import AWSCache
 from soft_mark_cloud.cloud.aws.collector import AWSCollector
+from soft_mark_cloud.cloud.aws.status import AWSStatusDao
 from soft_mark_cloud.cloud.aws.deploy.terraform import AWSDeployer
 
 from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm, TerraformSettingsForm
@@ -131,50 +135,92 @@ def cloud_view(request):
     Out:
     <Response [200]>
     """
+    REFRESH_TIME_LIMIT = 180  # 3 minutes
+
+    def _check_refreshing():
+        if refresh_status_ := AWSStatusDao.get_status(request.user, AWSCollector.process_name):
+            refresh_status_ = AWSStatusDao.check_expired(refresh_status_, REFRESH_TIME_LIMIT)
+            return not (refresh_status_.failed or refresh_status_.done)
+        return False
+
+    def _render(
+            resp: Any, status_code: int, refreshing_: bool = False, failed_: bool = False, done_: bool = False,
+            started_at: datetime = None
+    ):
+        if started_at:
+            started_at = started_at.strftime("%d-%m-%Y %H:%M:%S UTC")
+        return render(request, 'cloud_view.html',
+                      {
+                          'response': response,
+                          'status': status_code,
+                          'refreshing': refreshing_,
+                          'failed': failed_,
+                          'done': done_,
+                          'started_at': started_at
+                      })
+
     try:
         creds_db = AWSCredentials.objects.get(user=request.user)
     except ObjectDoesNotExist:
         response, status = 'AWS credentials not provided', 401
-        return render(request, 'cloud_view.html', {'response': response, 'status': status})
+        return _render(response, status)
 
-    if 'refresh' in request.GET:
-        creds = AWSCreds.from_model(creds_db)
-        if creds.is_valid:
-            collector = AWSCollector(credentials=creds)
-            aws_data = collector.collect_all()
-            aws_data = json.dumps(aws_data, indent=4)
-            AWSCache.save_cache(request.user, aws_data)
-            response, status = aws_data, 200
-        else:
-            response, status = 'Ineffective AWS credentials', 403
+    creds = AWSCreds.from_model(creds_db)
+    if not creds.is_valid:
+        response, status = 'Ineffective AWS credentials', 403
+        return _render(response, status)
 
-    else:
-        aws_data = AWSCache.get_cache_data_json(request.user)
-        response, status = aws_data, 200
+    refreshing = _check_refreshing()
+    if 'refresh' in request.GET and not refreshing:
+        AWSCollector(credentials=creds).run_async(user=request.user)
+        time.sleep(2)  # Let update refresh status
+        return redirect('cloud_view')
 
-    return render(request, 'cloud_view.html', {'response': response, 'status': status})
+    aws_data = AWSCache.get_cache_data(request.user)
+    response, status = aws_data, 200
+
+    refresh_status = AWSStatusDao.get_status(request.user, AWSCollector.process_name)
+    return _render(
+        response, status, refreshing, refresh_status.failed, refresh_status.done, refresh_status.created_at)
 
 
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'POST', 'DELETE'])
 @login_required
 def deployer(request):
-    current_user = request.user
+    DEPLOY_TIME_LIMIT = 300  # 5 minutes
+    user = request.user
+
+    # AWSStatusDao.delete_status(user, AWSDeployer.process_name)
     try:
         creds = AWSCreds.from_model(
-            model_instance=AWSCredentials.objects.get(user=current_user))
+            model_instance=AWSCredentials.objects.get(user=user))
     except ObjectDoesNotExist:
         resp = {'status': 401, 'error_msg': "AWS credentials not provided"}
         return render(request, 'deployer.html', resp)
 
+    deploy_status = AWSStatusDao.get_status(user, AWSDeployer.process_name)
     if request.method == 'GET':
-        resp = {'status': 204, 'form': TerraformSettingsForm()}
-    else:  # request.method == 'POST':
+        if not deploy_status:
+            resp = {'status': 204, 'form': TerraformSettingsForm()}
+        else:
+            resp = {'status': 200, 'deploy_details': deploy_status.details}
+
+    elif request.method == 'POST':
+        if deploy_status:
+            return redirect('deployer')
+
         form = TerraformSettingsForm(request.POST)
         if form.is_valid():
             settings = form.gen(creds)
-            instance_url = AWSDeployer(settings).deploy()
-            resp = {'status': 200, 'instance_url': instance_url}
+            AWSDeployer(settings).deploy_async(user)
+            time.sleep(3)  # Let update deploy status
+            return redirect('deployer')
         else:
             resp = {'status': 204, 'form': form}
+
+    else:  # request.method == 'DELETE':
+        if AWSStatusDao.get_status(user, AWSDeployer.process_name).done:
+            AWSStatusDao.delete_status(user, AWSDeployer.process_name)
+        return redirect('deployer')
 
     return render(request, 'deployer.html', resp)

@@ -26,7 +26,7 @@ class CloudCache:
         Saves cache for specified user
         """
         if isinstance(data, dict):
-            data = json.dumps(data)
+            data = json.dumps(data, indent=4)
 
         if cache := cls.get_cache(user):
             cache.data_json = data
@@ -55,3 +55,13 @@ class CloudCache:
             return cache.data_json
         else:
             return 'No data'
+
+    @classmethod
+    def get_cache_data(cls, user: User) -> dict:
+        """
+        Gets aws cache data json for specified user
+        """
+        if cache := cls.get_cache(user):
+            return cache.data
+        else:
+            return {}

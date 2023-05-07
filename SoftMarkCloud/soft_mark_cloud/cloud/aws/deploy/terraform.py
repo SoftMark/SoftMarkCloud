@@ -1,11 +1,17 @@
+import time
+import multiprocessing
 import os
 import subprocess
+from enum import Enum
 
 from pathlib import Path
 from dataclasses import dataclass
 
+from soft_mark_cloud.cloud.aws import EC2Client
+from soft_mark_cloud.cloud.aws.status import AWSStatusDao
 from soft_mark_cloud.cloud.core import Deployer, DeploySettings
 from soft_mark_cloud.cloud.aws.core import AWSCreds
+from soft_mark_cloud.models import User
 
 
 @dataclass
@@ -29,6 +35,13 @@ class TerraformSettings(DeploySettings):
 
 
 class AWSDeployer(Deployer):
+    process_name = 'terraform_deploying'
+
+    class Steps(Enum):
+        instance_generation = 'Generating instance ...'
+        receiving_instance_data = 'Receiving instance data ...'
+        instance_initialization = 'Instance initialization ...'
+
     def __init__(self, settings: TerraformSettings):
         super(AWSDeployer, self).__init__(settings)
         self.settings: TerraformSettings
@@ -99,6 +112,10 @@ resource "aws_instance" "{resource_name}" {{
             EOF
 }}
 
+output "instance_id" {{
+  value = aws_instance.{resource_name}.id
+}}
+
 output "public_ip" {{
   value = aws_instance.{resource_name}.public_ip
 }}"""\
@@ -152,7 +169,51 @@ output "public_ip" {{
         res = subprocess.run(["terraform", "output", 'public_ip'], cwd=self.tf_path, capture_output=True, text=True)
         return res.stdout.strip()[1:-1]
 
-    def deploy(self) -> str:
+    def get_instance_id(self) -> str:
+        res = subprocess.run(["terraform", "output", 'instance_id'], cwd=self.tf_path, capture_output=True, text=True)
+        return res.stdout.strip()[1:-1]
+
+    def deploy(self, user: User):
+        self.settings: TerraformSettings
+        details = {
+            'steps': {
+                self.Steps.instance_generation.value: False,
+                self.Steps.receiving_instance_data.value: False,
+                self.Steps.instance_initialization.value: False
+            },
+            'url': None
+        }
+        status = AWSStatusDao.create_status(user=user, process_name=self.process_name, details=details)
+
+        # Creating
         self.create_instance()
-        ip = self.get_instance_public_ip()
-        return f"http://{ip}:8000"
+        details['steps'][self.Steps.instance_generation.value] = True
+        AWSStatusDao.update_status_details(status, details)
+
+        # Receiving data
+        public_ip = self.get_instance_public_ip()
+        instance_id = self.get_instance_id()
+        details['steps'][self.Steps.receiving_instance_data.value] = True
+        AWSStatusDao.update_status_details(status, details)
+
+        # Initializing
+        ec2_client = EC2Client(self.settings.creds, self.settings.region)
+        check_after = 10  # seconds
+        while True:
+            time.sleep(check_after)
+
+            if not ec2_client.get_ec2_instance(instance_id):
+                break
+
+            if ec2_client.check_ec2_instance_initialized(instance_id):
+                break
+
+        details['url'] = f"http://{public_ip}:8000"
+        details['steps'][self.Steps.instance_initialization.value] = True
+        AWSStatusDao.update_status_details(status, details)
+
+        # Completed
+        AWSStatusDao.update_status_state(status, done=True)
+
+    def deploy_async(self, user: User):
+        multiprocessing.Process(target=self.deploy, args=(user, )).start()

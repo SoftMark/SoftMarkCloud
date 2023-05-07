@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='AWSCloudData',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_json', models.CharField(max_length=256)),
+                ('data_json', models.TextField()),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

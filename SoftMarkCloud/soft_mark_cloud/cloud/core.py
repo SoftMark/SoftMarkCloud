@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from soft_mark_cloud.models import User
+
 
 @dataclass
 class Credentials:
@@ -39,5 +41,5 @@ class Deployer:
     def __init__(self, settings: DeploySettings):
         self.settings = settings
 
-    def deploy(self):
+    def deploy(self, user: User):
         pass

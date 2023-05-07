@@ -1,5 +1,5 @@
 html {
-    height: 100%;
+    height: 95%;
 }
 body {
     font-family: 'Open Sans', sans-serif;
@@ -78,19 +78,34 @@ main {
 .cloud_content {
     overflow: auto;
     display: block;
-    height: 95%;
+    height: 100%;
     width: 85%;
     position: relative;
     float: left;
 }
 
+.loader {
+    border: 3px solid #ffffff;
+    border-top: 3px solid #000000;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 2s linear infinite;
+    margin-left: 5px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 footer {
-    position: fixed;
+    position: relative;
     bottom: 0;
     right: 0;
     height: 5%;
     width: 100%;
-    background-color: #f2f2f2;
+    background-color: #111;
     text-align: center;
     align-items: center;
     display: flex;
@@ -99,7 +114,7 @@ footer {
 
 footer p {
     font-size: 16px;
-    color: #121212;
+    color: #818181;
     text-align: center;
     margin: 0;
 }
