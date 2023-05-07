@@ -176,7 +176,7 @@ def cloud_view(request):
         time.sleep(2)  # Let update refresh status
         return redirect('cloud_view')
 
-    aws_data = AWSCache.get_cache_data(request.user)
+    aws_data = AWSCache.get_cache_data(request.user) or AWSCollector.empty_data
     response, status = aws_data, 200
 
     refresh_status = AWSStatusDao.get_status(request.user, AWSCollector.process_name)
