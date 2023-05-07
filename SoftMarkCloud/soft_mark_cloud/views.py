@@ -10,8 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from soft_mark_cloud.cloud.aws import AWSCreds
 from soft_mark_cloud.cloud.aws.cache import AWSCache
 from soft_mark_cloud.cloud.aws.collector import AWSCollector
+from soft_mark_cloud.cloud.aws.deploy.terraform import AWSDeployer
 
-from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm
+from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm, TerraformSettingsForm
 from soft_mark_cloud.models import AWSCredentials
 
 
@@ -152,3 +153,28 @@ def cloud_view(request):
         response, status = aws_data, 200
 
     return render(request, 'cloud_view.html', {'response': response, 'status': status})
+
+
+@api_view(['GET', 'POST'])
+@login_required
+def deployer(request):
+    current_user = request.user
+    try:
+        creds = AWSCreds.from_model(
+            model_instance=AWSCredentials.objects.get(user=current_user))
+    except ObjectDoesNotExist:
+        resp = {'status': 401, 'error_msg': "AWS credentials not provided"}
+        return render(request, 'deployer.html', resp)
+
+    if request.method == 'GET':
+        resp = {'status': 204, 'form': TerraformSettingsForm()}
+    else:  # request.method == 'POST':
+        form = TerraformSettingsForm(request.POST)
+        if form.is_valid():
+            settings = form.gen(creds)
+            instance_url = AWSDeployer(settings).deploy()
+            resp = {'status': 200, 'instance_url': instance_url}
+        else:
+            resp = {'status': 204, 'form': form}
+
+    return render(request, 'deployer.html', resp)

@@ -23,3 +23,21 @@ class CloudCollector:
     """
     def collect_all(self):
         pass
+
+
+@dataclass
+class DeploySettings:
+    """
+    Abstract deploy settings class
+    """
+
+
+class Deployer:
+    """
+    Abstract deployer class
+    """
+    def __init__(self, settings: DeploySettings):
+        self.settings = settings
+
+    def deploy(self):
+        pass
