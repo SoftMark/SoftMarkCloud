@@ -30,8 +30,14 @@ class AWSCloudData(models.Model):
 class AWSProcessStatus(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     process_name = models.CharField(max_length=256)
+
     done = models.BooleanField(default=False)
+    failed = models.BooleanField(default=False)
+
     details_json = models.TextField(null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def details(self):

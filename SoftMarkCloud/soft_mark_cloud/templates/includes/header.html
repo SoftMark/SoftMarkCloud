@@ -5,7 +5,8 @@
             <li><a href="{% url 'login' %}" class="menu-item">Sign in</a></li>
             <li><a href="{% url 'register' %}" class="menu-item">Sign up</a></li>
         {% else %}
-            <li><a href="{% url 'logout' %}" class="menu-item">Sign out</a></li>
+            <li><a href="{% url 'logout' %}" class="menu-item" style="color: #dc3545; font-weight: bold">
+                Sign out</a></li>
         {% endif %}
     </ul>
 </nav>

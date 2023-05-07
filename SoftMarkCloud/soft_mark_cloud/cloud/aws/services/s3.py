@@ -6,6 +6,8 @@ from soft_mark_cloud.cloud.aws.core import AWSGlobalClient, AWSCreds, AWSResourc
 
 from humanize import naturalsize
 
+from soft_mark_cloud.domain import DisplayItem, StringField, ItemsField
+
 
 @dataclass
 class S3BucketObject:
@@ -25,11 +27,20 @@ class S3BucketObject:
         )
 
     @property
+    def domain(self) -> DisplayItem:
+        fields = [
+            StringField('key', self.key),
+            StringField('size', naturalsize(self.size)),
+            StringField('last_modified', self.last_modified.isoformat())
+        ]
+        return DisplayItem(
+            name=self.key,
+            item_type='s3_bucket_object',
+            fields=fields)
+
+    @property
     def json(self):
-        data = self.__dict__
-        data['last_modified'] = self.last_modified.isoformat()
-        data['size'] = naturalsize(self.size)
-        return data
+        return self.domain.json
 
 
 @dataclass
@@ -54,12 +65,17 @@ class S3Bucket(AWSResource):
         )
 
     @property
-    def json(self):
-        data = super().json
-        data['bucket_size'] = naturalsize(self.bucket_size)
-        data['creation_date'] = self.creation_date.isoformat()
-        data['bucket_contents'] = [bo.json for bo in sorted(self.bucket_contents, key=lambda bo: -bo.size)]
-        return data
+    def domain(self) -> DisplayItem:
+        fields = [
+            StringField('name', self.name),
+            StringField('creation_date', self.creation_date.isoformat()),
+            StringField('bucket_size', naturalsize(self.bucket_size)),
+            ItemsField('bucket_contents', [bc.domain for bc in self.bucket_contents])
+        ]
+        return DisplayItem(
+            name=self.name,
+            item_type=self.resource_type,
+            fields=fields)
 
 
 class S3Client(AWSGlobalClient):

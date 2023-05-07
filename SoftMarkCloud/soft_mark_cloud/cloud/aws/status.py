@@ -1,4 +1,6 @@
-from typing import Optional
+import json
+from typing import Optional, Union
+from datetime import datetime, timedelta, timezone
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -14,6 +16,14 @@ class AWSStatusDao:
             return None
 
     @classmethod
+    def check_expired(cls, status: AWSProcessStatus, expiration_time: int):
+        if not status.done:
+            if status.created_at + timedelta(seconds=expiration_time) < datetime.now(tz=timezone.utc):
+                status.failed = True
+                status.save()
+        return status
+
+    @classmethod
     def delete_status(cls, user: User, process_name: str):
         try:
             status = AWSProcessStatus.objects.get(user=user, process_name=process_name)
@@ -27,12 +37,19 @@ class AWSStatusDao:
         status.save()
 
     @classmethod
-    def update_status_details(cls, status: AWSProcessStatus, details: str):
+    def update_status_details(cls, status: AWSProcessStatus, details: Union[str, dict]):
+        if details and isinstance(details, dict):
+            details = json.dumps(details, indent=4)
+
         status.details_json = details
         status.save()
+        return status
 
     @classmethod
-    def create_status(cls, user: User, process_name: str, details: str = None) -> AWSProcessStatus:
+    def create_status(cls, user: User, process_name: str, details: Union[str, dict] = None) -> AWSProcessStatus:
+        if details and isinstance(details, dict):
+            details = json.dumps(details, indent=4)
+
         if cls.get_status(user, process_name):
             cls.delete_status(user, process_name)
 

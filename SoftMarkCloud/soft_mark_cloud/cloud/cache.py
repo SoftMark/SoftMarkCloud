@@ -55,3 +55,13 @@ class CloudCache:
             return cache.data_json
         else:
             return 'No data'
+
+    @classmethod
+    def get_cache_data(cls, user: User) -> dict:
+        """
+        Gets aws cache data json for specified user
+        """
+        if cache := cls.get_cache(user):
+            return cache.data
+        else:
+            return {}

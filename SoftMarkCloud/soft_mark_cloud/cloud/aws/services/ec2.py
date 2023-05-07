@@ -1,8 +1,9 @@
 import datetime
 from dataclasses import dataclass, field
-from typing import Iterator, List
+from typing import Iterator, List, Iterable, Optional
 
 from soft_mark_cloud.cloud.aws.core import AWSRegionalClient, AWSCreds, AWSResource
+from soft_mark_cloud.domain import DisplayItem, StringField, ItemsField
 
 
 @dataclass
@@ -24,15 +25,24 @@ class EC2Instance(AWSResource):
             instance_id=data['InstanceId'],
             instance_type=data['InstanceType'],
             instance_state=data['State']['Name'],
-            subnet_id=data['SubnetId'],
-            vpc_id=data['VpcId'],
+            subnet_id=data.get('SubnetId'),
+            vpc_id=data.get('VpcId'),
             launch_time=data['LaunchTime'])
 
     @property
-    def json(self):
-        data = super().json
-        data['launch_time'] = self.launch_time.isoformat()
-        return data
+    def domain(self) -> DisplayItem:
+        fields = [
+            StringField('instance_id', self.instance_id),
+            StringField('instance_type', self.instance_type),
+            StringField('instance_state', self.instance_state),
+            StringField('subnet_id', self.subnet_id),
+            StringField('vpc_id', self.vpc_id),
+            StringField('launch_time', self.launch_time.isoformat())
+        ]
+        return DisplayItem(
+            name=self.instance_id,
+            item_type=self.__class__.__name__.lower(),
+            fields=fields)
 
 
 @dataclass
@@ -51,10 +61,17 @@ class Subnet(AWSResource):
             availability_zone=subnet['AvailabilityZone'])
 
     @property
-    def json(self):
-        data = super().json
-        data['ec2_instances'] = [ec2.json for ec2 in self.ec2_instances]
-        return data
+    def domain(self) -> DisplayItem:
+        fields = [
+            StringField('subnet_id', self.subnet_id),
+            StringField('vpc_id', self.vpc_id),
+            StringField('availability_zone', self.availability_zone),
+            ItemsField('ec2_instances', [ec2.domain for ec2 in self.ec2_instances])
+        ]
+        return DisplayItem(
+            name=self.subnet_id,
+            item_type=self.__class__.__name__.lower(),
+            fields=fields)
 
 
 @dataclass
@@ -77,10 +94,17 @@ class VPC(AWSResource):
             subnets=vpc['Subnets'])
 
     @property
-    def json(self):
-        data = super().json
-        data['subnets'] = [s.json for s in self.subnets]
-        return data
+    def domain(self) -> DisplayItem:
+        fields = [
+            StringField('id', self.id),
+            StringField('is_default', str(self.is_default)),
+            StringField('state', self.state),
+            ItemsField('subnets', [s.domain for s in self.subnets])
+        ]
+        return DisplayItem(
+            name=self.id,
+            item_type=self.resource_type,
+            fields=fields)
 
 
 class EC2Client(AWSRegionalClient):
@@ -111,13 +135,25 @@ class EC2Client(AWSRegionalClient):
             subnet_data['Arn'] = self.generate_arn('subnet', subnet_data['SubnetId'])
             subnet_obj = Subnet.from_api_dict(subnet_data)
             subnet_instances = [i for i in ec2_instances if i.subnet_id == subnet_obj.subnet_id]
-            subnet_obj.ec2_instances.extend(subnet_instances)
+            subnet_obj.ec2_instances = subnet_instances
             subnets.append(subnet_obj)
 
         return subnets
 
+    def check_ec2_instance_initialized(self, instance_id: str) -> bool:
+        resp = self.boto3_client.describe_instance_status(InstanceIds=[instance_id])
+        status = resp['InstanceStatuses'][0]
+        inst_state = status['InstanceState']['Name'] == 'running'
+        inst_status = status['InstanceStatus']['Status'] == 'ok'
+        sys_status = status['SystemStatus']['Status'] == 'ok'
+        return inst_state and inst_status and sys_status
+
+    def get_ec2_instance(self, instance_id: str) -> Optional[EC2Instance]:
+        if instances := [*self.describe_ec2_instances(instance_id)]:
+            return instances[0]
+
     # TODO: fetch more EC2 instances data
-    def describe_ec2_instances(self) -> Iterator[EC2Instance]:
+    def describe_ec2_instances(self, *instance_ids: str) -> Iterator[EC2Instance]:
         """
         Collects ec2 instances for client region
 
@@ -134,7 +170,11 @@ class EC2Client(AWSRegionalClient):
         out:
             List of EC2Instance class instances.
         """
-        resp: dict = self.boto3_client.describe_instances()
+        kwargs = {}
+        if instance_ids:
+            kwargs.update({'InstanceIds': [*instance_ids]})
+
+        resp: dict = self.boto3_client.describe_instances(**kwargs)
         for reservation_data in resp.get('Reservations', []):
             for instance_data in reservation_data.get('Instances'):
                 instance_arn = self.generate_arn('instance', instance_data['InstanceId'])

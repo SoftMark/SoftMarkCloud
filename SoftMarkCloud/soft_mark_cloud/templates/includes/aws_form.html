@@ -6,24 +6,31 @@
 
 
 <div class="cloud_content">
+    <h2 class="title-page">
+        Account manager
+    </h2>
     {% if status == 200 %}
-        <h2 class="title-page">
-            AWS Access key id: {{ creds.aws_access_key_id }}
-        </h2>
-        <h2 class="title-page">
-            AWS secret Access key: {{ creds.aws_secret_access_key }}
-        </h2>
+        <div class="alert alert-success" role="alert">
+            <h5>
+                <b>AWS Access key id:</b> {{ creds.aws_access_key_id }}
+            </h5>
+            <h5>
+                <b>AWS secret Access key:</b> {{ creds.aws_secret_access_key }}
+            </h5>
+        </div>
         <button class="btn btn-danger" id="delete-button">DELETE</button>
     {% elif status == 403 %}
-        <h2 class="title-page">
-            AWS Access key id: {{ creds.aws_access_key_id }}
-        </h2>
-        <h2 class="title-page">
-            AWS secret Access key: {{ creds.aws_secret_access_key }}
-        </h2>
-            <div class="error-message">
-                {{ error }}
-            </div>
+        <div class="alert alert-info" role="alert">
+            <h2 class="title-page">
+                AWS Access key id: {{ creds.aws_access_key_id }}
+            </h2>
+            <h2 class="title-page">
+                AWS secret Access key: {{ creds.aws_secret_access_key }}
+            </h2>
+        </div>
+        <div class="error-message">
+            {{ error }}
+        </div>
         <button class="btn btn-danger" id="delete-button">DELETE</button>
     {% else %}
         <form method="post" class="auth-form">
