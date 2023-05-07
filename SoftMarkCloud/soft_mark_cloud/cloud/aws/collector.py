@@ -29,14 +29,12 @@ class AWSCollector(CloudCollector):
                    'ap-southeast-1', 'ap-southeast-2', 'ca-central-1', 'eu-central-1', 'eu-west-1', 'eu-west-2',
                    'eu-west-3', 'eu-north-1', 'sa-east-1']
 
-    @property
-    def empty_data(self):
-        return {
-            'regional': {
-                r: [] for r in self.all_regions
-            },
-            'global': []
-        }
+    empty_data = {
+        'regional': {
+            r: [] for r in all_regions
+        },
+        'global': []
+    }
 
     def __init__(self, credentials: AWSCreds):
         self.credentials = credentials

@@ -109,6 +109,7 @@ def account_manager(request):
             creds.delete()
 
         AWSCache.clear_cache(request.user)
+        AWSStatusDao.delete_status(request.user, AWSCollector.process_name)
         resp = {'status': 404, 'form': AWSCredentialsForm()}
 
     return render(request, 'account_manager.html', resp)
@@ -180,8 +181,14 @@ def cloud_view(request):
     response, status = aws_data, 200
 
     refresh_status = AWSStatusDao.get_status(request.user, AWSCollector.process_name)
+
+    kwargs = {}
+    if refresh_status:
+        kwargs.update({
+            'failed_': refresh_status.failed, 'done_': refresh_status.done, 'started_at': refresh_status.created_at})
+
     return _render(
-        response, status, refreshing, refresh_status.failed, refresh_status.done, refresh_status.created_at)
+        response, status, refreshing, **kwargs)
 
 
 @api_view(['GET', 'POST', 'DELETE'])
