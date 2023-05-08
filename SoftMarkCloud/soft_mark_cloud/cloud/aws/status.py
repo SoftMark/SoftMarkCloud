@@ -16,11 +16,17 @@ class AWSStatusDao:
             return None
 
     @classmethod
-    def check_expired(cls, status: AWSProcessStatus, expiration_time: int):
-        if not status.done:
+    def is_expired(cls, status: AWSProcessStatus, expiration_time: int):
+        if not status.done and not status.failed:
             if status.created_at + timedelta(seconds=expiration_time) < datetime.now(tz=timezone.utc):
-                status.failed = True
-                status.save()
+                return True
+        return False
+
+    @classmethod
+    def check_expired(cls, status: AWSProcessStatus, expiration_time: int):
+        if cls.is_expired(status, expiration_time):
+            status.failed = True
+            status.save()
         return status
 
     @classmethod

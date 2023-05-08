@@ -6,7 +6,7 @@
 {% block content %}
     {% include 'includes/sidenav.html' %}
     {% if status == 200 %}
-        <div class="cloud_content">
+        <div id="cloud_view_content" class="cloud_content">
             <h2 class="title-page">
                 Cloud view
             </h2>
@@ -39,4 +39,5 @@
 
 {% block script %}
     <script src="{% static 'cloud/js/aws_data_refresh.js' %}"></script>
+    <script src="{% static 'cloud/js/cloud_view_refresh.js' %}"></script>
 {% endblock %}

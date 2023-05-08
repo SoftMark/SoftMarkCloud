@@ -16,29 +16,29 @@
         <ul>
         {% for service_data in region_service.fields %}
             {% for resource_data in service_data.value %}
-                <li class="list-group-item list-group-item-action list-group-item-success">
+                <li class="list-group-item list-group-item-action list-group-item-text">
                     {{ resource_data.name }}
                 <ul>
                 {% for resource_field in resource_data.fields %}
-                <li class="list-group-item list-group-item-action list-group-item-success">
+                <li class="list-group-item list-group-item-action list-group-item-text">
                     {% if resource_field.type == 'items' %}
                         {{ resource_field.name }}:
                         <ul>
                         {% for sub_resource_field in resource_field.value %}
-                            <li class="list-group-item list-group-item-action list-group-item-info">
+                            <li class="list-group-item list-group-item-action list-group-item-primary">
                                 {{ sub_resource_field.name }}
                                 <ul>
                                 {% for sub_sub_resource_field in sub_resource_field.fields %}
-                                    <li class="list-group-item list-group-item-action list-group-item-info">
+                                    <li class="list-group-item list-group-item-action list-group-item-primary">
                                         {% if sub_sub_resource_field.type == 'items' %}
                                             {{ sub_sub_resource_field.name }}:
                                             <ul>
                                             {% for ec2_instance in sub_sub_resource_field.value %}
-                                                <li class="list-group-item list-group-item-action list-group-item-secondary">
+                                                <li class="list-group-item list-group-item-action list-group-item-text">
                                                     {{ ec2_instance.name }}:
                                                     <ul>
                                                     {% for ec2_field in ec2_instance.fields %}
-                                                        <li class="list-group-item list-group-item-action list-group-item-secondary">
+                                                        <li class="list-group-item list-group-item-action list-group-item-text">
                                                             {{ ec2_field.name }}: {{ ec2_field.value }}
 
                                                         </li>
@@ -88,20 +88,20 @@
     <ul>
     {% for global_field in global_service.fields %}
         {% for bucket in global_field.value %}
-                <li class="list-group-item list-group-item-action list-group-item-success">
+                <li class="list-group-item list-group-item-action list-group-item-text">
                     {{ bucket.name }}
                 <ul>
                 {% for bucket_field in bucket.fields %}
-                <li class="list-group-item list-group-item-action list-group-item-success">
+                <li class="list-group-item list-group-item-action list-group-item-text">
                     {% if bucket_field.type == 'items' %}
                         {{ bucket_field.name }}:
                         <ul>
                             {% for bucket_obj in bucket_field.value %}
-                                <li class="list-group-item list-group-item-action list-group-item-secondary">
+                                <li class="list-group-item list-group-item-action list-group-item-primary">
                                     {{ bucket_obj.name }}
                                     <ul>
                                         {% for bucket_obj_field in bucket_obj.fields %}
-                                            <li class="list-group-item list-group-item-action list-group-item-secondary">
+                                            <li class="list-group-item list-group-item-action list-group-item-primary">
                                                 {{ bucket_obj_field.name }}: {{ bucket_obj_field.value }}
                                             </li>
                                         {% endfor %}

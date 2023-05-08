@@ -24,6 +24,10 @@
                     <div class="alert alert-success" role="alert">
                         {{ step }} ✔
                     </div>
+                {% elif expired %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ step }} ✖
+                    </div>
                 {% else %}
                     <div class="alert alert-warning" role="alert" style="display: flex">
                         {{ step }}
@@ -33,10 +37,15 @@
             {% endfor %}
 
             {% if deploy_details.url %}
-                 <div class="alert alert-success" role="alert">
-                     Completed! Instance url: <a href="{{ deploy_details.url }}">{{ deploy_details.url }}</a>
+                <div class="alert alert-success" role="alert">
+                    Completed! Instance url: <a href="{{ deploy_details.url }}" target="_blank">{{ deploy_details.url }}</a>
                 </div>
-                <button class="btn btn-danger" id="deploy-delete-button">DELETE</button>
+                <button class="btn btn-primary" id="deploy-delete-button">DEPLOY MORE</button>
+            {% elif expired %}
+                <div class="alert alert-danger" role="alert">
+                    Deploy time expired or something went wrong. Please, try again!
+                </div>
+                <button class="btn btn-primary" id="deploy-delete-button">DEPLOY MORE</button>
             {% else %}
                  <div class="alert alert-warning" role="alert" style="display: flex">
                      Deploy in progress ...
@@ -53,4 +62,5 @@
 {% block script %}
     <script src="{% static 'cloud/js/cookie.js' %}"></script>
     <script src="{% static 'cloud/js/deploy-delete.js' %}"></script>
+    <script src="{% static 'cloud/js/deploy_page_refresh.js' %}"></script>
 {% endblock %}
