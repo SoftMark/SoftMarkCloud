@@ -194,10 +194,9 @@ def cloud_view(request):
 @api_view(['GET', 'POST', 'DELETE'])
 @login_required
 def deployer(request):
-    DEPLOY_TIME_LIMIT = 300  # 5 minutes
+    DEPLOY_TIME_LIMIT = 600  # 5 minutes
     user = request.user
 
-    # AWSStatusDao.delete_status(user, AWSDeployer.process_name)
     try:
         creds = AWSCreds.from_model(
             model_instance=AWSCredentials.objects.get(user=user))
@@ -210,7 +209,8 @@ def deployer(request):
         if not deploy_status:
             resp = {'status': 204, 'form': TerraformSettingsForm()}
         else:
-            resp = {'status': 200, 'deploy_details': deploy_status.details}
+            expired = AWSStatusDao.is_expired(deploy_status, DEPLOY_TIME_LIMIT)
+            resp = {'status': 200, 'deploy_details': deploy_status.details, 'expired': expired}
 
     elif request.method == 'POST':
         if deploy_status:

@@ -6,7 +6,7 @@
 
 
 <div class="cloud_content">
-    <form method="post" class="auth-form">
+    <form id='deploy-form' method="post" class="auth-form">
         <h2 class="title-page">{% block title-page %}Terraform settings{% endblock %}</h2>
         {% csrf_token %}
         {{ form.as_p }}
