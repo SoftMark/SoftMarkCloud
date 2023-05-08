@@ -1,4 +1,6 @@
-<a href="/" class="logo">SoftMarkCloud</a>
+{% load static %}
+
+<a href="/" class="logo"><img alt="<Icon not found>" src={% static 'cloud/favicon.svg' %}>  SMCloud</a>
 <nav class="nav-menu">
     <ul class="menu-list">
         {% if user.is_anonymous %}
