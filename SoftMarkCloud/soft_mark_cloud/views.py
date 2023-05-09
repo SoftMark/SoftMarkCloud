@@ -226,7 +226,7 @@ def deployer(request):
             resp = {'status': 204, 'form': form}
 
     else:  # request.method == 'DELETE':
-        if deploy_status and (deploy_status.done or deploy_status.failed):
+        if deploy_status and (deploy_status.done, deploy_status.failed):
             AWSStatusDao.delete_status(user, AWSDeployer.process_name)
         return redirect('deployer')
 
