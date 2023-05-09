@@ -194,7 +194,7 @@ def cloud_view(request):
 @api_view(['GET', 'POST', 'DELETE'])
 @login_required
 def deployer(request):
-    DEPLOY_TIME_LIMIT = 600  # 5 minutes
+    DEPLOY_TIME_LIMIT = 600  # 10 minutes
     user = request.user
 
     try:
@@ -209,8 +209,8 @@ def deployer(request):
         if not deploy_status:
             resp = {'status': 204, 'form': TerraformSettingsForm()}
         else:
-            expired = AWSStatusDao.is_expired(deploy_status, DEPLOY_TIME_LIMIT)
-            resp = {'status': 200, 'deploy_details': deploy_status.details, 'expired': expired}
+            deploy_status = AWSStatusDao.check_expired(deploy_status, DEPLOY_TIME_LIMIT)
+            resp = {'status': 200, 'deploy_details': deploy_status.details, 'expired': deploy_status.failed}
 
     elif request.method == 'POST':
         if deploy_status:
@@ -226,7 +226,7 @@ def deployer(request):
             resp = {'status': 204, 'form': form}
 
     else:  # request.method == 'DELETE':
-        if AWSStatusDao.get_status(user, AWSDeployer.process_name).done:
+        if deploy_status and (deploy_status.done or deploy_status.failed):
             AWSStatusDao.delete_status(user, AWSDeployer.process_name)
         return redirect('deployer')
 
