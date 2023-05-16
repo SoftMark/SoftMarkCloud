@@ -20,11 +20,8 @@ document.querySelector('form.auth-form').addEventListener('submit', function(eve
 
         xhr.onload = function() {
             if (xhr.status === 200) {
-//                console.log('Form submitted successfully');
-//                console.log(this);
                 window.location.href = '/';
             } else {
-//                console.error('Form submission failed');
                 let error = document.querySelector('.error-message');
                 let error_child = document.querySelector('.error-message ul');
                 let errors_message = JSON.parse(this.response)['errors'];

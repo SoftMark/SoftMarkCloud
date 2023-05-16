@@ -45,11 +45,17 @@ class AWSCollector(CloudCollector):
         for region in self.all_regions:
             for regional_client_cls in AWSRegionalClient.__subclasses__():
                 regional_client = regional_client_cls(self.credentials, region)
-                res['regional'][region].append(regional_client.collect_all())
+                try:
+                    res['regional'][region].append(regional_client.collect_all())
+                except NotImplementedError:
+                    pass
 
         for global_client_cls in AWSGlobalClient.__subclasses__():
             global_client = global_client_cls(self.credentials)
-            res['global'].append(global_client.collect_all())
+            try:
+                res['global'].append(global_client.collect_all())
+            except NotImplementedError:
+                pass
 
         return res
 

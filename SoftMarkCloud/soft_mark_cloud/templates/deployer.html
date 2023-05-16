@@ -13,7 +13,8 @@
     {% include 'includes/sidenav.html' %}
 
     <div class="cloud_content">
-        <h2 class="title-page">
+    <div class="container">
+        <h2 class="display-6">
             Deploy
         </h2>
         {% if status == 204 %}
@@ -54,9 +55,10 @@
             {% endif %}
 
         {% else %}
-            <h2 style="color: #dc3545; margin: 0">{{ status }}. {{ error_msg }}</h2>
+            <h4 style="color: #dc3545; margin: 0">{{ error_msg }}</h4>
+            <h4 style="margin: 0">Please, specify credentials using <a href="/account_manager">Account manager</a></h4>
         {% endif %}
-    </div>
+    </div></div>
 {% endblock %}
 
 {% block script %}

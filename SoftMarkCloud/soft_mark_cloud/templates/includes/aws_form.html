@@ -5,28 +5,25 @@
 {% endblock %}
 
 
-<div class="cloud_content">
-    <h2 class="title-page">
-        Account manager
-    </h2>
+<div>
     {% if status == 200 %}
-        <div class="alert alert-success" role="alert">
-            <h5>
+        <div class="alert alert-primary" role="alert">
+            <p>
                 <b>AWS Access key id:</b> {{ creds.aws_access_key_id }}
-            </h5>
-            <h5>
+            </p>
+            <p>
                 <b>AWS secret Access key:</b> {{ creds.aws_secret_access_key }}
-            </h5>
+            </p>
         </div>
         <button class="btn btn-danger" id="delete-button">DELETE</button>
     {% elif status == 403 %}
         <div class="alert alert-info" role="alert">
-            <h2 class="title-page">
+            <p>
                 AWS Access key id: {{ creds.aws_access_key_id }}
-            </h2>
-            <h2 class="title-page">
+            </p>
+            <p>
                 AWS secret Access key: {{ creds.aws_secret_access_key }}
-            </h2>
+            </p>
         </div>
         <div class="error-message">
             {{ error }}

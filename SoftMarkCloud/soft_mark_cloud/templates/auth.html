@@ -8,8 +8,12 @@
 {% endblock %}
 
 {% block content %}
-    <div style="overflow: auto">
-        <h2 class="title-page" style="text-align: center">{% block title-page %}Auth{% endblock %}</h2>
+    <div class="sidenav">
+        <a href="/login/">Login</a>
+        <a href="/register/">Register</a>
+    </div>
+    <div class="cloud_content">
+        <h2 class="title-page" style="text-align: center; margin-top: 20pt">{% block title-page %}Auth{% endblock %}</h2>
         <form method="post" class="auth-form">
             {% csrf_token %}
             {{ form.as_p }}

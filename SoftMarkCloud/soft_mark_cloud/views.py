@@ -15,13 +15,13 @@ from soft_mark_cloud.cloud.aws.cache import AWSCache
 from soft_mark_cloud.cloud.aws.collector import AWSCollector
 from soft_mark_cloud.cloud.aws.status import AWSStatusDao
 from soft_mark_cloud.cloud.aws.deploy.terraform import AWSDeployer
+from soft_mark_cloud.cloud.aws.billing import AWSBilling
 
 from soft_mark_cloud.forms import SignUpForm, LoginForm, AWSCredentialsForm, TerraformSettingsForm
 from soft_mark_cloud.models import AWSCredentials
 
 
 @api_view(['GET'])
-@login_required
 def index(request):
     current_user = request.user
     return render(request, 'index.html', {'user': current_user})
@@ -81,9 +81,9 @@ def account_manager(request):
         if creds:
             creds = AWSCreds.from_model(creds)
             if creds.is_valid:
-                resp = {'status': 200, 'creds': creds, 'form': AWSCredentialsForm()}
+                resp = {'status': 200, 'creds': creds.hidden, 'form': AWSCredentialsForm()}
             else:
-                resp = {'status': 403, 'error': 'Ineffective AWS credentials', 'creds': creds}
+                resp = {'status': 403, 'error': 'Ineffective credentials', 'creds': creds}
         else:
             resp = {'status': 404, 'form': AWSCredentialsForm()}
 
@@ -98,9 +98,9 @@ def account_manager(request):
                 if creds.is_valid:
                     creds_form.user = current_user
                     creds_form.save()
-                    resp = {'status': 200, 'creds': creds}
+                    return redirect('account_manager')
                 else:
-                    resp = {'status': 401, 'form': form, 'error': 'Ineffective AWS credentials'}
+                    resp = {'status': 401, 'form': form, 'error': 'Ineffective credentials'}
             else:
                 resp = {'status': 404, 'form': form}
 
@@ -109,7 +109,8 @@ def account_manager(request):
             creds.delete()
 
         AWSCache.clear_cache(request.user)
-        AWSStatusDao.delete_status(request.user, AWSCollector.process_name)
+        AWSStatusDao.delete_all_statuses(request.user)
+
         resp = {'status': 404, 'form': AWSCredentialsForm()}
 
     return render(request, 'account_manager.html', resp)
@@ -163,12 +164,12 @@ def cloud_view(request):
     try:
         creds_db = AWSCredentials.objects.get(user=request.user)
     except ObjectDoesNotExist:
-        response, status = 'AWS credentials not provided', 401
+        response, status = 'Credentials not provided', 401
         return _render(response, status)
 
     creds = AWSCreds.from_model(creds_db)
     if not creds.is_valid:
-        response, status = 'Ineffective AWS credentials', 403
+        response, status = 'Ineffective credentials', 403
         return _render(response, status)
 
     refreshing = _check_refreshing()
@@ -201,7 +202,7 @@ def deployer(request):
         creds = AWSCreds.from_model(
             model_instance=AWSCredentials.objects.get(user=user))
     except ObjectDoesNotExist:
-        resp = {'status': 401, 'error_msg': "AWS credentials not provided"}
+        resp = {'status': 401, 'error_msg': "Credentials not provided"}
         return render(request, 'deployer.html', resp)
 
     deploy_status = AWSStatusDao.get_status(user, AWSDeployer.process_name)
@@ -231,3 +232,42 @@ def deployer(request):
         return redirect('deployer')
 
     return render(request, 'deployer.html', resp)
+
+
+@api_view(['GET'])
+@login_required
+def billing(request):
+    user = request.user
+
+    BILLING_TIME_LIMIT = 60
+
+    try:
+        creds = AWSCreds.from_model(
+            model_instance=AWSCredentials.objects.get(user=user))
+    except ObjectDoesNotExist:
+        resp = {'status': 401, 'error_msg': "Credentials not provided"}
+        return render(request, 'billing.html', resp)
+
+    aws_billing = AWSBilling(creds)
+    billing_status = AWSStatusDao.get_status(user, AWSBilling.process_name)
+    refreshing = billing_status and not billing_status.done and not billing_status.failed
+
+    if request.method == 'GET':
+        # Refresh
+        if 'refresh' in request.GET and not refreshing:
+            AWSBilling(creds).run_async(user=request.user)
+            time.sleep(2)  # Let update refresh status
+            return redirect('billing')
+
+        # Get
+        if not billing_status:
+            resp = {'status': 200, 'resp': aws_billing.empty_billing_data}
+        else:
+            billing_status = AWSStatusDao.check_expired(billing_status, BILLING_TIME_LIMIT)
+            resp = {
+                'status': 200,
+                'resp': billing_status.details,
+                'expired': billing_status.failed,
+                'refreshing': refreshing}
+
+        return render(request, 'billing.html', resp)

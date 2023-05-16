@@ -5,36 +5,37 @@
 
 {% block content %}
     {% include 'includes/sidenav.html' %}
+    <div id="cloud_view_content" class="cloud_content">
+    <div class="container">
+    <h2 class="display-6">
+        Cloud view
+    </h2>
     {% if status == 200 %}
-        <div id="cloud_view_content" class="cloud_content">
-            <h2 class="title-page">
-                Cloud view
-            </h2>
-
-            {% if not refreshing %}
-                {% if failed %}
-                    <div class="alert alert-danger" role="alert">
-                        WARNING. Refresh failed. Try to refresh again. (Started at {{ started_at }})
-                    </div>
-                {% elif done %}
-                    <div class="alert alert-success" role="alert">
-                        SUCCESS. Refresh completed! (Started at {{ started_at }})
-                    </div>
-                {% endif %}
-
-                <button class="w-100 btn btn-lg btn-primary" id="refresh-button">REFRESH</button>
-            {% else %}
-                <div class="alert alert-info" style="display: flex" role="alert">
-                    Refreshing...
-                    <div class="loader"></div>
+        {% if not refreshing %}
+            {% if failed %}
+                <div class="alert alert-danger" role="alert">
+                    WARNING. Refresh failed. Try to refresh again. (Started at {{ started_at }})
                 </div>
-
+            {% elif done %}
+                <div class="alert alert-success" role="alert">
+                    SUCCESS. Refresh completed! (Started at {{ started_at }})
+                </div>
             {% endif %}
-            {% include 'includes/cloud_view_content.html' %}
-        </div>
+
+            <button class="w-100 btn btn-lg btn-primary" id="refresh-button">REFRESH</button>
+        {% else %}
+            <div class="alert alert-info" style="display: flex" role="alert">
+                Refreshing...
+                <div class="loader"></div>
+            </div>
+
+        {% endif %}
+        {% include 'includes/cloud_view_content.html' %}
     {% else %}
-        <h2 style="color: #dc3545; margin: 0">{{ status }}. {{ response }}</h2>
+        <h4 style="color: #dc3545; margin: 0">{{ response }}</h4>
+        <h4 style="margin: 0">Please, specify credentials using <a href="/account_manager">Account manager</a></h4>
     {% endif %}
+    </div></div>
 {% endblock %}
 
 {% block script %}
