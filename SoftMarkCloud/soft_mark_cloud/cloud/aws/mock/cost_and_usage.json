@@ -1,0 +1,69 @@
+{
+      "GroupDefinitions": [
+          {
+              "Type": "DIMENSION",
+              "Key": "SERVICE"
+          }
+      ],
+      "ResultsByTime": [
+          {
+              "TimePeriod": {
+                  "Start": "2022-04-01",
+                  "End": "2022-05-01"
+              },
+              "Total": {
+                  "UnblendedCost": {
+                      "Amount": "134.15",
+                      "Unit": "USD"
+                  }
+              },
+              "Groups": [
+                  {
+                      "Keys": [
+                          "Amazon Elastic Compute Cloud - Compute"
+                      ],
+                      "Metrics": {
+                          "UnblendedCost": {
+                              "Amount": "112.98",
+                              "Unit": "USD"
+                          }
+                      }
+                  },
+                  {
+                      "Keys": [
+                          "Amazon Elastic Block Store"
+                      ],
+                      "Metrics": {
+                          "UnblendedCost": {
+                              "Amount": "11.10",
+                              "Unit": "USD"
+                          }
+                      }
+                  },
+                  {
+                      "Keys": [
+                          "Amazon Simple Storage Service"
+                      ],
+                      "Metrics": {
+                          "UnblendedCost": {
+                              "Amount": "5.32",
+                              "Unit": "USD"
+                          }
+                      }
+                  }
+              ]
+          }
+      ],
+      "ResponseMetadata": {
+          "RequestId": "2a0b470f-1122-4336-a988-42abce09ee0d",
+          "HTTPStatusCode": 200,
+          "HTTPHeaders": {
+              "content-type": "application/json",
+              "content-length": "603",
+              "date": "Mon, 09 May 2023 12:00:00 GMT",
+              "x-amzn-requestid": "2a0b470f-1122-4336-a988-42abce09ee0d",
+              "connection": "keep-alive"
+          },
+          "RetryAttempts": 0
+      }
+  }

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Billing{% endblock %}
+
+{% block content %}
+    {% include 'includes/sidenav.html' %}
+    <div class="cloud_content"><div class="container">
+        <h2 class="display-6">
+            Billing
+        </h2>
+
+        {% if status == 200 %}
+            {% if not refreshing %}
+                <button class="w-100 btn btn-lg btn-primary" id="billing-refresh-button">REFRESH</button>
+            {% else %}
+                <div class="alert alert-info" style="display: flex" role="alert">
+                Refreshing...
+                <div class="loader"></div>
+            </div>
+            {% endif %}
+            {{ resp.graph_html | safe }}
+            <div class="alert alert-primary" role="alert" style="margin-left: 2%; width: 75%">
+                <p>Annual: <b>{{ resp.annual }} $</b></p>
+                {% if resp.annual %}
+                    <p>
+                        This month: <b>{{ resp.month }}</b>
+                        ({{ resp.this_month_prediction }})
+                        <b>$</b>
+                    </p>
+                    <p>Next month: {{ resp.next_month_prediction }} $</p>
+                {% else %}
+                    <p>This month: <b>0 $</b></p>
+                    <p>Next month: <b>0 $</b></p>
+                {% endif %}
+            </div>
+        {% else %}
+            <h4 style="color: #dc3545; margin: 0">{{ error_msg }}</h4>
+            <h4 style="margin: 0">Please, specify credentials using <a href="/account_manager">Account manager</a></h4>
+        {% endif %}
+
+    </div></div>
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'cloud/js/billing_data_refresh.js' %}"></script>
+    <script src="{% static 'cloud/js/cloud_view_refresh.js' %}"></script>
+{% endblock %}

@@ -51,6 +51,17 @@ class AWSCreds(Credentials):
             aws_secret_access_key=model_instance.aws_secret_access_key)
 
     @property
+    def hidden(self):
+        def strip(text: str):
+            n, mid = len(text) // 5, len(text) // 2
+            nose, tape = text[:n], text[2 * mid - n:]
+            return nose + '***' + tape
+
+        return AWSCreds(
+            aws_access_key_id=strip(self.aws_access_key_id),
+            aws_secret_access_key=strip(self.aws_secret_access_key))
+
+    @property
     def is_valid(self) -> bool:
         sts_client = boto3.client(
             'sts',

@@ -3,11 +3,11 @@
 
 <div class="container">
 <ul class="list-group">
-<li class="ist-group-item list-group-item-action list-group-item-primary">
+<li class="list-group-item list-group-item-action list-group-item-secondary">
   Regional
 <ul>
 {% for region, regions_data in response.regional|items %}
-<li class="list-group-item list-group-item-action list-group-item-primary">
+<li class="list-group-item list-group-item-action list-group-item-text">
     {{ region }}
     <ul>
     {% for region_service in regions_data %}
@@ -79,29 +79,29 @@
 
 <div class="container">
 <ul class="list-group">
-<li class="ist-group-item list-group-item-action list-group-item-primary">
+<li class="list-group-item list-group-item-action list-group-item-secondary">
   Global
 <ul>
 {% for global_service in response.global %}
-<li class="list-group-item list-group-item-action list-group-item-primary">
+<li class="list-group-item list-group-item-action list-group-item-text">
     {{ global_service.name }}
     <ul>
     {% for global_field in global_service.fields %}
         {% for bucket in global_field.value %}
-                <li class="list-group-item list-group-item-action list-group-item-text">
+                <li class="list-group-item list-group-item-action list-group-item-primary">
                     {{ bucket.name }}
                 <ul>
                 {% for bucket_field in bucket.fields %}
-                <li class="list-group-item list-group-item-action list-group-item-text">
+                <li class="list-group-item list-group-item-action list-group-item-primary">
                     {% if bucket_field.type == 'items' %}
                         {{ bucket_field.name }}:
                         <ul>
                             {% for bucket_obj in bucket_field.value %}
-                                <li class="list-group-item list-group-item-action list-group-item-primary">
+                                <li class="list-group-item list-group-item-action list-group-item-text">
                                     {{ bucket_obj.name }}
                                     <ul>
                                         {% for bucket_obj_field in bucket_obj.fields %}
-                                            <li class="list-group-item list-group-item-action list-group-item-primary">
+                                            <li class="list-group-item list-group-item-action list-group-item-text">
                                                 {{ bucket_obj_field.name }}: {{ bucket_obj_field.value }}
                                             </li>
                                         {% endfor %}

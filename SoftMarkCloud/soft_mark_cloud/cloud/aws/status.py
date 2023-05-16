@@ -38,6 +38,14 @@ class AWSStatusDao:
             return None
 
     @classmethod
+    def delete_all_statuses(cls, user: User):
+        try:
+            status = AWSProcessStatus.objects.filter(user=user)
+            status.delete()
+        except ObjectDoesNotExist:
+            return None
+
+    @classmethod
     def update_status_state(cls, status: AWSProcessStatus, done: bool):
         status.done = done
         status.save()

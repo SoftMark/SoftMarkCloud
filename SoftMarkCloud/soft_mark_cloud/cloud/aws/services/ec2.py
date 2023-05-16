@@ -1,9 +1,15 @@
 import datetime
-from dataclasses import dataclass, field
-from typing import Iterator, List, Iterable, Optional
 
+from logging import getLogger
+from dataclasses import dataclass, field
+from typing import Iterator, List, Optional
+
+from soft_mark_cloud.cloud.aws import PricingClient
 from soft_mark_cloud.cloud.aws.core import AWSRegionalClient, AWSCreds, AWSResource
 from soft_mark_cloud.domain import DisplayItem, StringField, ItemsField
+
+
+logger = getLogger(__name__)
 
 
 @dataclass
@@ -17,6 +23,11 @@ class EC2Instance(AWSResource):
     subnet_id: str
     vpc_id: str
     launch_time: datetime.datetime
+    price_per_hour: float = None
+
+    @property
+    def price_per_month(self):
+        return self.price_per_hour * 24 * 31
 
     @classmethod
     def from_api_dict(cls, data: dict) -> 'EC2Instance':
@@ -32,15 +43,16 @@ class EC2Instance(AWSResource):
     @property
     def domain(self) -> DisplayItem:
         fields = [
-            StringField('instance_id', self.instance_id),
-            StringField('instance_type', self.instance_type),
-            StringField('instance_state', self.instance_state),
-            StringField('subnet_id', self.subnet_id),
-            StringField('vpc_id', self.vpc_id),
-            StringField('launch_time', self.launch_time.isoformat())
+            StringField('Instance ID', self.instance_id),
+            StringField('Instance type', self.instance_type),
+            StringField('State', self.instance_state),
+            StringField('Subnet ID', self.subnet_id),
+            StringField('Vpc ID', self.vpc_id),
+            StringField('Launch time', self.launch_time.isoformat()),
+            StringField('Price per month', f'{round(self.price_per_month, 2)} $')
         ]
         return DisplayItem(
-            name=self.instance_id,
+            name=self.arn,
             item_type=self.__class__.__name__.lower(),
             fields=fields)
 
@@ -63,13 +75,16 @@ class Subnet(AWSResource):
     @property
     def domain(self) -> DisplayItem:
         fields = [
-            StringField('subnet_id', self.subnet_id),
-            StringField('vpc_id', self.vpc_id),
-            StringField('availability_zone', self.availability_zone),
-            ItemsField('ec2_instances', [ec2.domain for ec2 in self.ec2_instances])
+            StringField('Subnet ID', self.subnet_id),
+            StringField('VPC ID', self.vpc_id),
+            StringField('Availability zone', self.availability_zone),
         ]
+        if ec2_instances := self.ec2_instances:
+            fields.append(
+                ItemsField('EC2 Instances', [ec2.domain for ec2 in ec2_instances])
+            )
         return DisplayItem(
-            name=self.subnet_id,
+            name=self.arn,
             item_type=self.__class__.__name__.lower(),
             fields=fields)
 
@@ -96,13 +111,13 @@ class VPC(AWSResource):
     @property
     def domain(self) -> DisplayItem:
         fields = [
-            StringField('id', self.id),
-            StringField('is_default', str(self.is_default)),
-            StringField('state', self.state),
-            ItemsField('subnets', [s.domain for s in self.subnets])
+            StringField('ID', self.id),
+            StringField('Is default', str(self.is_default)),
+            StringField('State', self.state),
+            ItemsField('Subnets', [s.domain for s in self.subnets])
         ]
         return DisplayItem(
-            name=self.id,
+            name=self.arn,
             item_type=self.resource_type,
             fields=fields)
 
@@ -170,6 +185,9 @@ class EC2Client(AWSRegionalClient):
         out:
             List of EC2Instance class instances.
         """
+        self.credentials: AWSCreds
+        pricing_client = PricingClient(self.credentials)
+
         kwargs = {}
         if instance_ids:
             kwargs.update({'InstanceIds': [*instance_ids]})
@@ -179,7 +197,9 @@ class EC2Client(AWSRegionalClient):
             for instance_data in reservation_data.get('Instances'):
                 instance_arn = self.generate_arn('instance', instance_data['InstanceId'])
                 instance_data['InstanceArn'] = instance_arn
-                yield EC2Instance.from_api_dict(instance_data)
+                ec2_instance = EC2Instance.from_api_dict(instance_data)
+                ec2_instance.price_per_hour = pricing_client.get_ec2_instance_price(ec2_instance.instance_type)
+                yield ec2_instance
 
     def describe_vpc(self) -> Iterator[VPC]:
         """
@@ -205,4 +225,5 @@ class EC2Client(AWSRegionalClient):
             yield VPC.from_api_dict(vpc)
 
     def collect_resources(self):
+        logger.info(f"Receiving EC2 data for {self.region_name} region")
         return list(self.describe_vpc())

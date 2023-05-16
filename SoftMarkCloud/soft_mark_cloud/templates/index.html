@@ -4,6 +4,13 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    {% include 'includes/sidenav.html' %}
-    {% include 'includes/cloud_content.html' %}
+    {% if not user.is_anonymous %}
+        {% include 'includes/sidenav.html' %}
+    {% else %}
+        <div class="sidenav">
+            <a href="/login/">Login</a>
+            <a href="/register/">Register</a>
+        </div>
+    {% endif %}
+    {% include 'includes/home.html' %}
 {% endblock %}

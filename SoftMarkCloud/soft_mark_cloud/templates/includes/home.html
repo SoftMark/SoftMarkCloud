@@ -1,0 +1,57 @@
+<div class="cloud_content">
+
+    <div class="container" style="margin: 20pt 0 0 10%; width: 90%">
+        {% if user.is_anonymous %}
+            <h2 class="title-page">Welcome to SMCloud!</h2>
+        {% else %}
+            <h2 class="title-page">Welcome to SMCloud, <b>{{ user.username|title }}</b>!</h2>
+        {% endif %}
+        <div class="col-md-10">
+            SMCloud is a cloud service that helps users get the most out of cloud resources
+            to deploy and manage services. It includes several tools that simplify the process of
+            working with cloud resources and allow you to control costs.
+
+            SMCloud also has a simple and intuitive interface that makes it easy
+            to use cloud resources even for users with no cloud experience. Thanks to this,
+            the service allows you to significantly increase the efficiency of working
+            with cloud resources and simplify the process of managing them.
+        </div>
+
+      <div class="row" style="margin-top: 50pt">
+        <div class="col-md-5">
+            <h4><b>Cloud view</b></h4>
+          <p>This tool provides users with information about the available resources
+              used in the course of working with a particular service or application.
+              With this tool, users can easily monitor resource usage and optimize resource
+              usage for maximum performance.
+              With this tool, users can easily monitor their resources and take necessary
+              actions to improve performance and optimize costs.</p>
+        </div>
+        <div class="col-md-5">
+           <h4><b>Account manager</b></h4>
+          <p>With this tool, users can easily add and manage Credentials for different ISPs.
+              This allows users to easily switch between different providers and use their resources
+              according to the requirements of the project or task. Thanks to this tool, users can easily
+              manage their credentials and facilitate the process of working with cloud providers.</p>
+        </div>
+        <div class="col-md-5">
+           <h4><b>Deploy</b></h4>
+          <p>This tool is designed to automate the process of deploying applications and services on
+              cloud platforms. Users can deploy their
+              applications without worrying about setting up hardware
+              resources. So users can significantly reduce infrastructure preparation time
+              and running quickly with a deployed application.</p>
+        </div>
+          <div class="col-md-5">
+           <h4><b>Billing</b></h4>
+          <p>Another important SMCloud tool is the ability to display cost statistics.
+              The service allows users to manage their spending on cloud resources by
+              displaying information about the costs and resources that are being used
+              in real time. This helps users to optimize their costs and minimize the cost
+              of cloud resources.</p>
+        </div>
+      </div>
+    </div>
+</div>
+
+
